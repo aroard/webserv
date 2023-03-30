@@ -103,18 +103,62 @@ private:
 			perror("ERROR recv"); exit(EXIT_FAILURE);
 		}
 		
-		parse_request_http(std::string(msg));
+		parse_request_http(msg);
 		
 		close (_socketClient);
 
 		return ;
 	}
 
-	void	parse_request_http( std::string msg ) {
+	void	parse_request_http(char* msg ) {
+		std::map<std::string, std::string> request;
+		std::string line;
+		std::string array_method[] = {{"GET"}, {"HEAD"}, {"POST"}, {"OPTIONS"}, {"CONNECT"}, {"TRACE"}, {"PUT"}, {"PATCH"}, {"DELETE"}};
 
-		return ;
+		char *token = strtok(msg, "\n");
+		line = std::string(token);
+		request[line.substr(0 ,line.find(' '))] = line.substr(line.find(' '));
+
+		while (token != NULL){
+			token = strtok(NULL, "\n");
+			line = std::string(token);
+			if (line.size() <= 1)
+				break;
+			request[line.substr(0 ,line.find(':'))] = line.substr(line.find(' ') + 1);
+		}
+		int a = 0;
+		while ( a < 9)
+		{
+			if (request.count(array_method[a++]))
+				break;
+		}
+{{"GET"}, {"HEAD"}, {"POST"}, {"OPTIONS"}, {"CONNECT"}, {"TRACE"}, {"PUT"}, {"PATCH"}, {"DELETE"}};
+
+		switch (a){
+			case 0:
+				std::cout << "GET" << std::endl;
+			case 1:
+				std::cout << "HEAD" << std::endl;
+			case 2:
+				std::cout << "POST" << std::endl;
+			case 3:
+				std::cout << "OPTIONS" << std::endl;
+			case 4:
+				std::cout << "CONNECT" << std::endl;
+			case 5:
+				std::cout << "TRACE" << std::endl;
+			case 6:
+				std::cout << "PUT" << std::endl;
+			case 7:
+				std::cout << "PATCH" << std::endl;
+			case 8:
+				std::cout << "DELETE" << std::endl;
+			default:
+				std::cout << "Missing path" << std::endl;
+		}
+
+		return;
 	}
-
 };
 
 /* SANS PATH */

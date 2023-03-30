@@ -14,6 +14,8 @@
 # include <sys/epoll.h>
 # include <fstream>
 # include <sstream>
+# include <map>
+# include <vector>
 
 class Server;
 class Client;
