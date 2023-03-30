@@ -8,12 +8,13 @@ class Server
 private:
 	sockaddr_in		_confServer;
 	int				_socketServer;
+	int				_socketClient;
 	int				_port;
 	std::string		_addr;
 	bool			_end;
 public:
 	explicit Server( std::string addr = "127.0.0.1", \
-		int port = 8080 ) : _addr(addr), _port(port), _end(false) {
+		int port = 8000 ) : _addr(addr), _port(port), _end(false) {
 
 		if ((_socketServer = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 			perror("ERROR socket"); exit(EXIT_FAILURE);
@@ -56,7 +57,7 @@ public:
 		struct epoll_event ev;
 
 		ev.data.fd = _socketServer;
-		ev.events = EPOLLIN;
+		ev.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP;
 
 		if (epoll_ctl(epoll_fd, \
 			EPOLL_CTL_ADD, _socketServer, &ev) < 0) {
@@ -67,26 +68,49 @@ public:
 		int					nfds;
 
 		while (true) {
+
 			if ((nfds = epoll_wait(epoll_fd, events, 10, 0)) < 0) {
 				perror("ERROR epoll_wait"); exit(EXIT_FAILURE);
 			}
+
 			for (int i = 0, a = 0; i < nfds; ++i) {
+				std::cout << events[i].events << std::endl;
 				if (events[i].events == EPOLLIN) {
 					create_client();
 				}
+				else if (events[i].events == EPOLLRDHUP) {
+					std::cout << "Disconnected" << std::endl;
+					exit(EXIT_SUCCESS);
+				}
 			}
-			if (_end)
-				break ;
+
 		}
+		return ;
 	}
 
 private:
 	void	create_client( void ) {
-		std::cout << "Creating Client..." << std::endl;
+		
+		if ((_socketClient = accept(_socketServer, NULL, NULL)) < 0) {
+			perror("ERRPR accept"); exit(EXIT_FAILURE);
+		}
 
-		Client	salut;
+		char	msg[4096];
+		
+		std::memset(msg, 0, sizeof(msg));
+		
+		if (recv(_socketClient, msg, sizeof(msg), 0) < 0) {
+			perror("ERROR recv"); exit(EXIT_FAILURE);
+		}
+		
+		parse_request_http(std::string(msg));
+		
+		close (_socketClient);
 
-		salut.routine();
+		return ;
+	}
+
+	void	parse_request_http( std::string msg ) {
 
 		return ;
 	}

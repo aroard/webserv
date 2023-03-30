@@ -1,47 +1,51 @@
-#ifndef __CLIENT_HPP__
-# define __CLIENT_HPP__
+// #ifndef __CLIENT_HPP__
+// # define __CLIENT_HPP__
 
 
-class Client
-{
-private:
-	// std::thread		thread;
-	int				_socketServer;
-	int				_socketClient;
+// class Client
+// {
+// private:
+// 	pthread_t		_thread;
+// 	int				_socketServer;
+// 	int				_socketClient;
 
-	Client( void );
+// 	Client( void );
 
-public:
-	Client(int socketServer) : _socketServer(socketServer) {
+// public:
+// 	Client(int socketServer) : _socketServer(socketServer) {
 
-		if ((_socketClient = accept(_socketServer, NULL, NULL)) < 0) {
-			perror("ERRPR accept"); exit(EXIT_FAILURE);
-		}
+// 		std::cout << "Constructor Client called" << std::endl;
+// 	}
 
-		std::cout << "Constructor Client called" << std::endl;
-	}
-
-	~Client() {
+// 	~Client() {
 		
-		close (_socketClient);
+// 		close (_socketClient);
 
-		std::cout << "Destructor Client called" << std::endl;
-	}
+// 		std::cout << "Destructor Client called" << std::endl;
+// 	}
 
-	void	routine( void ) {
+// 	void	run( void ) {
+// 		routine();
+// 	}
 
-		char	msg[4096];
+// private:
+// 	void	*routine( void ) {
 
-		while (true) {
-			if (recv(_socketClient, msg, sizeof(msg), 0) < 0) {
-				perror("ERROR recv"); exit(EXIT_FAILURE);
-			}
-			std::cout << "Message: [" << msg << " ]" << std::endl;
-		}
-		return ;
-	}
+// 		if ((_socketClient = accept(_socketServer, NULL, NULL)) < 0) {
+// 			perror("ERRPR accept"); exit(EXIT_FAILURE);
+// 		}
 
-};
+// 		char	msg[4096];
+
+// 		if (recv(_socketClient, msg, sizeof(msg), 0) < 0) {
+// 			perror("ERROR recv"); exit(EXIT_FAILURE);
+// 		}
+// 		std::cout << "Message: [" << msg << " ]" << std::endl;
+// 		close (_socketClient);
+// 		return (NULL);
+// 	}
+
+// };
 
 
-#endif
+// #endif
