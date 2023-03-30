@@ -1,104 +1,104 @@
-// # include <iostream>
-// # include <sys/socket.h>
-// # include <netinet/in.h>
-// # include <netdb.h>
-// # include <arpa/inet.h>
-// # include <unistd.h>
-// # include <cstring> 
-// # include <pthread.h>
-// # include <stdio.h>
+# include <iostream>
+# include <sys/socket.h>
+# include <netinet/in.h>
+# include <netdb.h>
+# include <arpa/inet.h>
+# include <unistd.h>
+# include <cstring> 
+# include <pthread.h>
+# include <stdio.h>
 
 
-// typedef struct User
-// {
-// 	char 	name[255];
-// 	int		age;
-// }User;
+typedef struct User
+{
+	char 	name[255];
+	int		age;
+}User;
 
 
-// void *function(void *arg) {
+void *function(void *arg) {
 
-// 	int	socket;
-// 	const char msg[] = "quel est votre nom et votre age ?";
+	int	socket;
+	const char msg[] = "quel est votre nom et votre age ?";
 
-// 	socket = *(int *)arg;
-// 	send(socket, msg, strlen(msg), 0);
+	socket = *(int *)arg;
+	send(socket, msg, strlen(msg), 0);
 
-// 	User user;
+	User user;
 
-// 	recv(socket, &user, sizeof(user), 0);
+	recv(socket, &user, sizeof(user), 0);
 
-// 	std::cout << "user.name: " << user.name \
-// 		<< std::endl << "user.age: " << user.age \
-// 		<< std::endl;
+	std::cout << "user.name: " << user.name \
+		<< std::endl << "user.age: " << user.age \
+		<< std::endl;
 
-// 	close(socket);
-// 	delete (int *)arg;
+	close(socket);
+	delete (int *)arg;
 
-// 	pthread_exit(NULL);
-// }
+	pthread_exit(NULL);
+}
 
 
-// int	main(int argc, char **argv)
-// {
-// 	int socketServer;
+int	main(int argc, char **argv)
+{
+	int socketServer;
 
-// 	if ((socketServer = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-// 		perror("ERROR socket"); exit (EXIT_FAILURE);
-// 	}
+	if ((socketServer = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+		perror("ERROR socket"); exit (EXIT_FAILURE);
+	}
 
-// 	struct sockaddr_in addrServer;
+	struct sockaddr_in addrServer;
 
-// 	addrServer.sin_addr.s_addr = inet_addr("127.0.0.1");
-// 	addrServer.sin_family = AF_INET;
-// 	addrServer.sin_port = htons(30000);
+	addrServer.sin_addr.s_addr = inet_addr("127.0.0.1");
+	addrServer.sin_family = AF_INET;
+	addrServer.sin_port = htons(30000);
 
-// 	if (bind(socketServer, \
-// 		(const struct sockaddr *)&addrServer, \
-// 		sizeof(addrServer)) < 0) {
-// 		perror("ERROR bind"); exit (EXIT_FAILURE);
-// 	}
-// 	std::cout << "bind : " << socketServer << std::endl;
+	if (bind(socketServer, \
+		(const struct sockaddr *)&addrServer, \
+		sizeof(addrServer)) < 0) {
+		perror("ERROR bind"); exit (EXIT_FAILURE);
+	}
+	std::cout << "bind : " << socketServer << std::endl;
 
-// 	if (listen(socketServer, 3) < 0) {
-// 		perror("ERROR listen"); exit (EXIT_FAILURE);
-// 	}
-// 	std::cout << "listen" << std::endl;
+	if (listen(socketServer, 3) < 0) {
+		perror("ERROR listen"); exit (EXIT_FAILURE);
+	}
+	std::cout << "listen" << std::endl;
 
-// 	struct sockaddr_in addrClient;
-// 	socklen_t csize;
+	struct sockaddr_in addrClient;
+	socklen_t csize;
 
-// 	csize = sizeof(addrClient);
+	csize = sizeof(addrClient);
 
-// 	pthread_t	clientThread[3];
-// 	int 		socketClient;
-// 	int			*socketTmp;
+	pthread_t	clientThread[3];
+	int 		socketClient;
+	int			*socketTmp;
 
-// 	for (int i = 0; i < 3; ++i) {
-// 		if ((socketClient = accept(socketServer, \
-// 			(struct sockaddr *)&addrClient, &csize)) < 0) {
-// 			perror("ERROR accept"); exit (EXIT_FAILURE);
-// 		}
-// 		std::cout << "accept" << std::endl;
-// 		std::cout << "client: " << socketClient << std::endl;
+	for (int i = 0; i < 3; ++i) {
+		if ((socketClient = accept(socketServer, \
+			(struct sockaddr *)&addrClient, &csize)) < 0) {
+			perror("ERROR accept"); exit (EXIT_FAILURE);
+		}
+		std::cout << "accept" << std::endl;
+		std::cout << "client: " << socketClient << std::endl;
 		
-// 		socketTmp = new int(1);
-// 		*socketTmp = socketClient;
+		socketTmp = new int(1);
+		*socketTmp = socketClient;
 
-// 		pthread_create(&clientThread[i], NULL, \
-// 			function, socketTmp);
-// 	}
+		pthread_create(&clientThread[i], NULL, \
+			function, socketTmp);
+	}
 
-// 	for (int i = 0; i < 3; ++i) {
-// 		pthread_join(clientThread[i], NULL);
-// 	}
+	for (int i = 0; i < 3; ++i) {
+		pthread_join(clientThread[i], NULL);
+	}
 
-// 	close(socketServer);
+	close(socketServer);
 	
-// 	std::cout << "close" << std::endl;
+	std::cout << "close" << std::endl;
 
-// 	return (0);
-// }
+	return (0);
+}
 // #include <iostream>
 // #include <fstream>
 // #include <sstream>
@@ -126,7 +126,7 @@
 //     std::memset(&serverAddress, 0, sizeof(serverAddress));
 //     serverAddress.sin_family = AF_INET;
 //     serverAddress.sin_addr.s_addr = INADDR_ANY;
-//     serverAddress.sin_port = htons(8080);
+//     serverAddress.sin_port = htons(8001);
 
 //     // Lier la socket à l'adresse IP et au port du serveur
 //     if (bind(sockfd, (struct sockaddr*)&serverAddress, sizeof(serverAddress)) < 0)
@@ -168,7 +168,7 @@
 //         // Construire la réponse HTTP
 //         std::ostringstream responseStream;
 
-//         std::ifstream fileStream("index.html");
+//         std::ifstream fileStream("./tools/index.html");
 //         if (!fileStream.is_open())
 //         {
 //             std::cerr << "Erreur : impossible d'ouvrir le fichier HTML." << std::endl;

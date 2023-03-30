@@ -10,7 +10,15 @@
 # include <cstring> 
 # include <pthread.h>
 # include <stdio.h>
+# include <cstdlib>
+# include <sys/epoll.h>
+# include <fstream>
+# include <sstream>
+
+class Server;
+class Client;
 
 # include "server.hpp"
+# include "client.hpp"
 
 #endif
