@@ -179,6 +179,35 @@ private:
 		return;
 	}
 
+	void open_files(std::ifstream & open, std::string path, int which)
+	{
+		std::string path2;
+
+		if (!which)
+		{
+			std::cout << "which" << which << std::endl;
+			open.open(path.c_str());
+			if(!open)
+				open_files(open, path, which++);
+		}
+		if (which == 1)
+		{
+			std::cout << "which" << which << std::endl;
+			path2 = path + "/index.html";
+			open.open(path2.c_str());
+			if(!open)
+				open_files(open, path, which++);
+		}
+		if (which == 2)
+		{
+			std::cout << "which" << which << std::endl;
+			path2 = path + "/index";
+			open.open(path2.c_str());
+			if(!open)
+				open_files(open, path, which++);
+		}
+	}
+
 	void	get_request_http( std::map<std::string, std::string> &request) {
 
 		std::string	path;
@@ -194,11 +223,12 @@ private:
 		// index.html index index/ index/index.html
 
 		
-
-
-		web_page.open("./tools/index.html");
-		if (web_page.is_open() != true) {
-			perror("ERROR is_open"); exit(EXIT_FAILURE);
+		open_files(web_page, "./tools", 0);
+		
+		if (!web_page)
+		{
+			std::cout << "0 fichier trouve" << std::endl;
+			exit(1);
 		}
 
 		std::string		line;
