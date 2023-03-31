@@ -18,6 +18,8 @@
 # include <vector>
 # include <list>
 # include <algorithm>
+# include <ctime>
+# include <iomanip>
 
 class Server;
 class Client;

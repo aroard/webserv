@@ -14,7 +14,7 @@ private:
 	bool			_end;
 public:
 	explicit Server( std::string addr = "127.0.0.1", \
-		int port = 8000 ) : _addr(addr), _port(port), _end(false) {
+		int port = 8001 ) : _addr(addr), _port(port), _end(false) {
 
 		if ((_socketServer = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 			perror("ERROR socket"); exit(EXIT_FAILURE);
@@ -146,7 +146,6 @@ private:
 		switch (a){
 			case 0:
 				get_request_http(request);
-				std::cout << "GET" << std::endl;
 				break ;
 			case 1:
 				std::cout << "HEAD" << std::endl;
@@ -180,7 +179,7 @@ private:
 	}
 
 
-	void open_files(std::ifstream &open, std::string &path, std::string &msg)
+	int open_files(std::ifstream &open, std::string &path, std::string &msg)
 	{
 		std::ifstream		file_tmp;
 		std::string			array_index[] = {"index.html", "index.htm", "test.html"};
@@ -199,31 +198,48 @@ private:
 				do {
 					open.close();
 					open.open((path + array_index[i++]).c_str());
-					std::cout << path << std::endl;
 				} while (i != 3 && !open.is_open());
 			}
 		}
 		if (open.is_open()) {
 			msg = "HTTP/1.1 200 OK\n\n";
+			i = 200;
 		}
 		else {
 			msg = "HTTP/1.1 404 Not Found\n\n";
 			open.open("./tools/NotFound.html");
+			i = 404;
 		}
-		return ;
+		return i;
 	}
 
+	std::string getDateAndTime()
+	{
+		std::stringstream ss;
+		std::time_t t = std::time(NULL);
+		std::tm* now = std::gmtime(&t);
+		
+		std::string			month[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
+		ss << std::setw(2) << "[" << now->tm_mday << "/";
+		ss << month[now->tm_mon] << "/";
+		ss << std::setw(2) << (now->tm_year + 1900) << ":";
+    	ss << std::setw(2) << std::setfill('0') << now->tm_hour << ":";
+    	ss << std::setw(2) << std::setfill('0') << now->tm_min << ":";
+    	ss << std::setw(2) << std::setfill('0') << now->tm_sec << " +0000]";
+		return ss.str();
+	}
 
 	void	get_request_http( std::map<std::string, std::string> &request) {
 
 		std::ifstream	web_page;
 		std::string		path;
 		std::string		msg;
+		int				error_code;
 
 		path = request["GET"];
 		path = '.' + path.substr(0, path.find(" "));
 	
-		open_files(web_page, path, msg);
+		error_code = open_files(web_page, path, msg);
 
 		std::string		line;
 
@@ -233,6 +249,8 @@ private:
 		if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0) {
 			perror("ERROR send"); exit(EXIT_FAILURE);
 		}
+		std::cout << request["Host"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
+			 << error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent"] + "\"" << std::endl;
 		web_page.close();
 		return ;
 	}
