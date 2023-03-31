@@ -119,20 +119,20 @@ private:
 
 		if (std::getline(ss, line)) {
 			pos = line.find(' ');
-			request[line.substr(0, pos)] = line.substr(pos + 1);
+			request[line.substr(0, pos)] = line.substr(pos + 1, line.size() - pos - 2);
 		}
 		while (std::getline(ss, line)) {
 
 			if (line.size() > 1) {
 				pos = line.find(":");
-				request[line.substr(0, pos)] = line.substr(pos + 2, line.size() - pos - 2);
+				request[line.substr(0, pos)] = line.substr(pos + 2, line.size() - pos - 3);
 			}
 		}
 
-		for (std::map<std::string, std::string>::iterator it = request.begin();
-			it != request.end(); ++it) {
-			std::cout << "Key [" << it->first << "] Value [" << it->second << "]" << std::endl;
-		}
+		// for (std::map<std::string, std::string>::iterator it = request.begin();
+		// 	it != request.end(); ++it) {
+		// 	std::cout << "Key [" << it->first << "] Value [" << it->second << "]" << std::endl;
+		// }
 
 		std::string array_method[] = {	"GET", "HEAD", "POST", \
 										"OPTIONS", "CONNECT", "TRACE", \
@@ -145,6 +145,7 @@ private:
 
 		switch (a){
 			case 0:
+				get_request_http(request);
 				std::cout << "GET" << std::endl;
 				break ;
 			case 1:
@@ -177,7 +178,65 @@ private:
 		}
 		return;
 	}
+
+	void	get_request_http( std::map<std::string, std::string> &request) {
+
+		std::string	path;
+
+		path = request["GET"];
+		path = path.substr(0, path.find(" "));
+
+		std::ifstream		web_page;
+		std::string			msg;
+
+		msg = "HTTP/1.1 200 OK\n\n";
+
+		// index.html index index/ index/index.html
+
+		
+
+
+		web_page.open("./tools/index.html");
+		if (web_page.is_open() != true) {
+			perror("ERROR is_open"); exit(EXIT_FAILURE);
+		}
+
+		std::string		line;
+
+		while (std::getline(web_page, line)) {
+			msg += line + '\n';
+		}
+
+		
+
+
+
+		if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0) {
+			perror("ERROR send"); exit(EXIT_FAILURE);
+		}
+
+		web_page.close();
+
+		return ;
+	}
 };
+
+// HTTP/1.1 200 OK
+// Content-Type: text/html
+// Content-Length: 1234
+// Cache-Control: max-age=3600
+// Set-Cookie: nom_du_cookie=valeur_du_cookie
+
+// <!DOCTYPE html>
+// <html>
+// <head>
+//     <title>Titre de la page</title>
+// </head>
+// <body>
+//     <h1>Bienvenue sur ma page web !</h1>
+//     <p>Ceci est le contenu de ma page.</p>
+// </body>
+// </html>
 
 /* SANS PATH */
 
