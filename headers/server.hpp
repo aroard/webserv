@@ -14,7 +14,7 @@ private:
 	bool			_end;
 public:
 	explicit Server( std::string addr = "127.0.0.1", \
-		int port = 8001 ) : _addr(addr), _port(port), _end(false) {
+		int port = 8000 ) : _addr(addr), _port(port), _end(false) {
 
 		if ((_socketServer = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 			perror("ERROR socket"); exit(EXIT_FAILURE);
@@ -134,16 +134,13 @@ private:
 		// 	std::cout << "Key [" << it->first << "] Value [" << it->second << "]" << std::endl;
 		// }
 
-		std::string array_method[] = {	"GET", "HEAD", "POST", \
-										"OPTIONS", "CONNECT", "TRACE", \
-										"PUT", "PATCH", "DELETE"} ;
 		int a = 0;
 		do {
-			if (request.count(array_method[a]))
+			if (request.count(g_array_method[a]))
 				break;
 		} while (++a < 9);
 
-		switch (a){
+		switch (a) {
 			case 0:
 				get_request_http(request);
 				break ;
@@ -179,10 +176,10 @@ private:
 	}
 
 
-	int open_files(std::ifstream &open, std::string &path, std::string &msg)
+	int open_files( std::ifstream &open, std::string &path, std::string &msg )
 	{
 		std::ifstream		file_tmp;
-		std::string			array_index[] = {"index.html", "index.htm", "test.html"};
+		std::string			array_index[] = {"index.html", "index.htm", "test.html", "index.php"};
 		int					i = 0;
 
 		open.open(path.c_str());
@@ -213,21 +210,52 @@ private:
 		return i;
 	}
 
-	std::string getDateAndTime()
+
+	std::string getDateAndTime( void )
 	{
 		std::stringstream ss;
 		std::time_t t = std::time(NULL);
 		std::tm* now = std::gmtime(&t);
 		
-		std::string			month[] = {"JAN", "FEB", "MAR", "APR", "MAY", "JUN", "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"};
 		ss << std::setw(2) << "[" << now->tm_mday << "/";
-		ss << month[now->tm_mon] << "/";
+		ss << g_month[now->tm_mon] << "/";
 		ss << std::setw(2) << (now->tm_year + 1900) << ":";
     	ss << std::setw(2) << std::setfill('0') << now->tm_hour << ":";
     	ss << std::setw(2) << std::setfill('0') << now->tm_min << ":";
     	ss << std::setw(2) << std::setfill('0') << now->tm_sec << " +0000]";
 		return ss.str();
 	}
+
+
+	void	execute_cgi_php( std::string &path_php, std::string &msg ) {
+		int		fd_pipe[2];
+		pid_t	pid;
+
+		if (pipe(fd_pipe) == -1) { perror("ERROR pipe"); exit(EXIT_FAILURE); }
+		if ((pid = fork()) == -1) { perror("ERROR fork"); exit(EXIT_FAILURE); }
+		if (!pid) {
+			if (dup2(fd_pipe[1], STDOUT_FILENO) == -1 || close(fd_pipe[1]) == -1 \
+				|| close(fd_pipe[0]) == -1) {
+				perror("ERROR dup2"); exit(EXIT_FAILURE);
+			}
+			char 	**ag = (char **)malloc(sizeof(char *) * 3);
+			ag[0] = strdup("/usr/bin/php-cgi");
+			ag[1] = strdup(path_php.c_str());
+			ag[2] = NULL;
+			execve("/usr/bin/php-cgi", ag, NULL);
+			perror("ERROR execve"); exit(EXIT_FAILURE);
+		}
+		close(fd_pipe[1]);
+		
+		char	tmp[32];
+		msg = "HTTP/1.1 200 OK\n";
+		while (read(fd_pipe[0], tmp, 31) > 0) { msg += tmp; }
+
+		close(fd_pipe[0]);
+		waitpid(pid, 0, 0);
+		return ;
+	}
+
 
 	void	get_request_http( std::map<std::string, std::string> &request) {
 
@@ -241,17 +269,27 @@ private:
 	
 		error_code = open_files(web_page, path, msg);
 
-		std::string		line;
-
-		while (std::getline(web_page, line)) { 
-			msg += line + '\n';
+		if (error_code != 404 \
+			&& !path.compare(path.size() - 4, path.size(), ".php")) {
+			execute_cgi_php(path, msg);
 		}
+		else {
+			std::string		line;
+
+			while (std::getline(web_page, line)) { 
+				msg += line + '\n';
+			}
+		}
+
+		web_page.close();
+
 		if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0) {
 			perror("ERROR send"); exit(EXIT_FAILURE);
 		}
+
 		std::cout << request["Host"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
 			 << error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent"] + "\"" << std::endl;
-		web_page.close();
+		
 		return ;
 	}
 };
