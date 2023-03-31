@@ -74,7 +74,6 @@ public:
 			}
 
 			for (int i = 0, a = 0; i < nfds; ++i) {
-				std::cout << events[i].events << std::endl;
 				if (events[i].events == EPOLLIN) {
 					create_client();
 				}
@@ -105,58 +104,77 @@ private:
 		
 		parse_request_http(msg);
 		
-		close (_socketClient);
+		close(_socketClient);
 
 		return ;
 	}
 
-	void	parse_request_http(char* msg ) {
+
+	void	parse_request_http( std::string msg ) {
+		
 		std::map<std::string, std::string> request;
-		std::string line;
-		std::string array_method[] = {{"GET"}, {"HEAD"}, {"POST"}, {"OPTIONS"}, {"CONNECT"}, {"TRACE"}, {"PUT"}, {"PATCH"}, {"DELETE"}};
+		std::stringstream	ss(msg);
+		std::string			line;
+		size_t				pos;
 
-		char *token = strtok(msg, "\n");
-		line = std::string(token);
-		request[line.substr(0 ,line.find(' '))] = line.substr(line.find(' '));
-
-		while (token != NULL){
-			token = strtok(NULL, "\n");
-			line = std::string(token);
-			if (line.size() <= 1)
-				break;
-			request[line.substr(0 ,line.find(':'))] = line.substr(line.find(' ') + 1);
+		if (std::getline(ss, line)) {
+			pos = line.find(' ');
+			request[line.substr(0, pos)] = line.substr(pos + 1);
 		}
+		while (std::getline(ss, line)) {
+
+			if (line.size() > 1) {
+				pos = line.find(":");
+				request[line.substr(0, pos)] = line.substr(pos + 2, line.size() - pos - 2);
+			}
+		}
+
+		for (std::map<std::string, std::string>::iterator it = request.begin();
+			it != request.end(); ++it) {
+			std::cout << "Key [" << it->first << "] Value [" << it->second << "]" << std::endl;
+		}
+
+		std::string array_method[] = {	"GET", "HEAD", "POST", \
+										"OPTIONS", "CONNECT", "TRACE", \
+										"PUT", "PATCH", "DELETE"} ;
 		int a = 0;
-		while ( a < 9)
-		{
-			if (request.count(array_method[a++]))
+		do {
+			if (request.count(array_method[a]))
 				break;
-		}
-{{"GET"}, {"HEAD"}, {"POST"}, {"OPTIONS"}, {"CONNECT"}, {"TRACE"}, {"PUT"}, {"PATCH"}, {"DELETE"}};
+		} while (++a < 9);
 
 		switch (a){
 			case 0:
 				std::cout << "GET" << std::endl;
+				break ;
 			case 1:
 				std::cout << "HEAD" << std::endl;
+				break ;
 			case 2:
 				std::cout << "POST" << std::endl;
+				break ;
 			case 3:
 				std::cout << "OPTIONS" << std::endl;
+				break ;
 			case 4:
 				std::cout << "CONNECT" << std::endl;
+				break ;
 			case 5:
 				std::cout << "TRACE" << std::endl;
+				break ;
 			case 6:
 				std::cout << "PUT" << std::endl;
+				break ;
 			case 7:
 				std::cout << "PATCH" << std::endl;
+				break ;
 			case 8:
 				std::cout << "DELETE" << std::endl;
+				break ;
 			default:
 				std::cout << "Missing path" << std::endl;
+				break ;
 		}
-
 		return;
 	}
 };
