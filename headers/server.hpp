@@ -251,11 +251,51 @@ private:
 		msg = "HTTP/1.1 200 OK\n";
 		while (read(fd_pipe[0], tmp, 31) > 0) { msg += tmp; }
 
+		std::cout << "MSG : " << msg << std::endl;
+
 		close(fd_pipe[0]);
 		waitpid(pid, 0, 0);
 		return ;
 	}
 
+	/*
+	void	execute_cgi_php( std::string &path_php, std::string &msg ) {
+		int		fd_pipe[2];
+		pid_t	pid;
+		int orig_stdin = dup(STDIN_FILENO);
+
+		if (pipe(fd_pipe) == -1) { perror("ERROR pipe"); exit(EXIT_FAILURE); }
+		if ((pid = fork()) == -1) { perror("ERROR fork"); exit(EXIT_FAILURE); }
+		if (!pid) {
+			if (dup2(fd_pipe[1], STDOUT_FILENO) == -1 || close(fd_pipe[1]) == -1 \
+				|| close(fd_pipe[0]) == -1) {
+				perror("ERROR dup2"); exit(EXIT_FAILURE);
+			}
+			char 	**ag = (char **)malloc(sizeof(char *) * 3);
+			ag[0] = strdup("/usr/bin/php-cgi");
+			ag[1] = strdup(path_php.c_str());
+			ag[2] = NULL;
+			execve("/usr/bin/php-cgi", ag, NULL);
+			perror("ERROR execve"); exit(EXIT_FAILURE);
+		}
+		close(fd_pipe[1]);
+		char	tmp[200];
+		int fd_copy = dup(fd_pipe[0]);
+        dup2(fd_copy, STDIN_FILENO);
+		msg = "HTTP/1.1 200 OK\n";
+		while(std::cin.getline(tmp, 200)){
+			msg += tmp;
+		}
+		std::cout << "MSG : " << msg << std::endl;
+		close(fd_copy);
+		close(fd_pipe[0]);
+		dup2(orig_stdin, STDIN_FILENO);
+        close(orig_stdin);
+
+		waitpid(pid, 0, 0);
+		return ;
+	}
+*/
 
 	void	get_request_http( std::map<std::string, std::string> &request) {
 
