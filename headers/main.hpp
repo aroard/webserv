@@ -16,6 +16,7 @@
 # include <sstream>
 # include <map>
 # include <vector>
+# include <list>
 # include <algorithm>
 
 class Server;

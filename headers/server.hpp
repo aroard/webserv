@@ -179,77 +179,67 @@ private:
 		return;
 	}
 
-	void open_files(std::ifstream & open, std::string path, int which)
-	{
-		std::string path2;
 
-		if (!which)
-		{
-			std::cout << "which" << which << std::endl;
-			open.open(path.c_str());
-			if(!open)
-				open_files(open, path, which++);
+	void open_files(std::ifstream &open, std::string &path, std::string &msg)
+	{
+		std::ifstream		file_tmp;
+		std::string			array_index[] = {"index.html", "index.htm", "test.html"};
+		int					i = 0;
+
+		open.open(path.c_str());
+		if (open) {
+			if (path.at(path.size() - 1) != '/') {
+				file_tmp.open((path + '/').c_str());
+				if (file_tmp.is_open()) {
+					file_tmp.close();
+					path.push_back('/');
+				}
+			}
+			if (path.at(path.size() - 1) == '/') {
+				do {
+					open.close();
+					open.open((path + array_index[i++]).c_str());
+					std::cout << path << std::endl;
+				} while (i != 3 && !open.is_open());
+			}
 		}
-		if (which == 1)
-		{
-			std::cout << "which" << which << std::endl;
-			path2 = path + "/index.html";
-			open.open(path2.c_str());
-			if(!open)
-				open_files(open, path, which++);
+		if (open.is_open()) {
+			msg = "HTTP/1.1 200 OK\n\n";
 		}
-		if (which == 2)
-		{
-			std::cout << "which" << which << std::endl;
-			path2 = path + "/index";
-			open.open(path2.c_str());
-			if(!open)
-				open_files(open, path, which++);
+		else {
+			msg = "HTTP/1.1 404 Not Found\n\n";
+			open.open("./tools/NotFound.html");
 		}
+		return ;
 	}
+
 
 	void	get_request_http( std::map<std::string, std::string> &request) {
 
-		std::string	path;
+		std::ifstream	web_page;
+		std::string		path;
+		std::string		msg;
 
 		path = request["GET"];
-		path = path.substr(0, path.find(" "));
-
-		std::ifstream		web_page;
-		std::string			msg;
-
-		msg = "HTTP/1.1 200 OK\n\n";
-
-		// index.html index index/ index/index.html
-
-		
-		open_files(web_page, "./tools", 0);
-		
-		if (!web_page)
-		{
-			std::cout << "0 fichier trouve" << std::endl;
-			exit(1);
-		}
+		path = '.' + path.substr(0, path.find(" "));
+	
+		open_files(web_page, path, msg);
 
 		std::string		line;
 
-		while (std::getline(web_page, line)) {
+		while (std::getline(web_page, line)) { 
 			msg += line + '\n';
 		}
-
-		
-
-
-
 		if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0) {
 			perror("ERROR send"); exit(EXIT_FAILURE);
 		}
-
 		web_page.close();
-
 		return ;
 	}
 };
+
+// 172.20.0.1 - - [31/Mar/2023:15:22:58 +0000] "GET /index.html/d HTTP/2.0" \
+// 404 132 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0"
 
 // HTTP/1.1 200 OK
 // Content-Type: text/html
