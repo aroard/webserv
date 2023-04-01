@@ -179,7 +179,7 @@ private:
 	int open_files( std::ifstream &open, std::string &path, std::string &msg )
 	{
 		std::ifstream		file_tmp;
-		std::string			array_index[] = {"index.html", "index.htm", "test.html", "index.php"};
+		std::string			array_index[] = {"test/index.html", "index.html", "index.htm", "test.html", "index.php"};
 		int					i = 0;
 
 		open.open(path.c_str());
@@ -195,15 +195,16 @@ private:
 				do {
 					open.close();
 					open.open((path + array_index[i++]).c_str());
-				} while (i != 3 && !open.is_open());
+					std::cout << path + array_index[i++] << std::endl;
+				} while (i != 4 && !open.is_open());
 			}
 		}
 		if (open.is_open()) {
-			msg = "HTTP/1.1 200 OK\n\n";
+			msg = "HTTP/1.1 200 OK\nContent-type: text/html; charset=UTF-8\n\n";
 			i = 200;
 		}
 		else {
-			msg = "HTTP/1.1 404 Not Found\n\n";
+			msg = "HTTP/1.1 404 Not Found\nContent-type: text/html; charset=UTF-8\n\n";
 			open.open("./tools/NotFound.html");
 			i = 404;
 		}
@@ -228,8 +229,9 @@ private:
 
 
 	void	execute_cgi_php( std::string &path_php, std::string &msg ) {
-		int		fd_pipe[2];
-		pid_t	pid;
+		int				fd_pipe[2];
+		pid_t			pid;
+		const char		*ag[3] = {"./cgi_bin/php-cgi", path_php.c_str(), NULL};
 
 		if (pipe(fd_pipe) == -1) { perror("ERROR pipe"); exit(EXIT_FAILURE); }
 		if ((pid = fork()) == -1) { perror("ERROR fork"); exit(EXIT_FAILURE); }
@@ -238,64 +240,25 @@ private:
 				|| close(fd_pipe[0]) == -1) {
 				perror("ERROR dup2"); exit(EXIT_FAILURE);
 			}
-			char 	**ag = (char **)malloc(sizeof(char *) * 3);
-			ag[0] = strdup("/usr/bin/php-cgi");
-			ag[1] = strdup(path_php.c_str());
-			ag[2] = NULL;
-			execve("/usr/bin/php-cgi", ag, NULL);
+			execve("./cgi_bin/php-cgi", const_cast<char**>(ag), NULL);
 			perror("ERROR execve"); exit(EXIT_FAILURE);
 		}
 		close(fd_pipe[1]);
 		
 		char	tmp[32];
+
+		std::memset(tmp, 0, 31);
 		msg = "HTTP/1.1 200 OK\n";
-		while (read(fd_pipe[0], tmp, 31) > 0) { msg += tmp; }
-
-		std::cout << "MSG : " << msg << std::endl;
-
+		
+		while (read(fd_pipe[0], tmp, 31) > 0) { 
+			msg += tmp; 
+			std::memset(tmp, 0, 31); 
+		}
 		close(fd_pipe[0]);
 		waitpid(pid, 0, 0);
 		return ;
 	}
 
-	/*
-	void	execute_cgi_php( std::string &path_php, std::string &msg ) {
-		int		fd_pipe[2];
-		pid_t	pid;
-		int orig_stdin = dup(STDIN_FILENO);
-
-		if (pipe(fd_pipe) == -1) { perror("ERROR pipe"); exit(EXIT_FAILURE); }
-		if ((pid = fork()) == -1) { perror("ERROR fork"); exit(EXIT_FAILURE); }
-		if (!pid) {
-			if (dup2(fd_pipe[1], STDOUT_FILENO) == -1 || close(fd_pipe[1]) == -1 \
-				|| close(fd_pipe[0]) == -1) {
-				perror("ERROR dup2"); exit(EXIT_FAILURE);
-			}
-			char 	**ag = (char **)malloc(sizeof(char *) * 3);
-			ag[0] = strdup("/usr/bin/php-cgi");
-			ag[1] = strdup(path_php.c_str());
-			ag[2] = NULL;
-			execve("/usr/bin/php-cgi", ag, NULL);
-			perror("ERROR execve"); exit(EXIT_FAILURE);
-		}
-		close(fd_pipe[1]);
-		char	tmp[200];
-		int fd_copy = dup(fd_pipe[0]);
-        dup2(fd_copy, STDIN_FILENO);
-		msg = "HTTP/1.1 200 OK\n";
-		while(std::cin.getline(tmp, 200)){
-			msg += tmp;
-		}
-		std::cout << "MSG : " << msg << std::endl;
-		close(fd_copy);
-		close(fd_pipe[0]);
-		dup2(orig_stdin, STDIN_FILENO);
-        close(orig_stdin);
-
-		waitpid(pid, 0, 0);
-		return ;
-	}
-*/
 
 	void	get_request_http( std::map<std::string, std::string> &request) {
 
@@ -309,7 +272,9 @@ private:
 	
 		error_code = open_files(web_page, path, msg);
 
-		if (error_code != 404 \
+		std::cout << path << std::endl;
+
+		if (error_code != 404 && path.size() > 4\
 			&& !path.compare(path.size() - 4, path.size(), ".php")) {
 			execute_cgi_php(path, msg);
 		}
@@ -320,6 +285,8 @@ private:
 				msg += line + '\n';
 			}
 		}
+
+		std::cout << msg << std::endl;
 
 		web_page.close();
 
