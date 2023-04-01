@@ -27,6 +27,8 @@
 class Server;
 class Client;
 
+int	_nb_client = 0;
+
 const std::string	g_month[] = {	"Jan", "Feb", "Mar", "Apr", \
 									"May", "Jun", "Jul", "Aug", \
 									"Sep", "Oct", "Nov", "Dec" };
