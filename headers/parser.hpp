@@ -27,6 +27,9 @@ public:
 			perror(_path_conf.c_str());
 			exit(EXIT_FAILURE);
 		}
+		if (!parse_logfiles("./logs/acess.log") || !parse_logfiles("./logs/error.log"))
+			exit(EXIT_FAILURE);
+
 		_file_conf.seekg(0, _file_conf.end);
 		int	length = _file_conf.tellg();
 		_file_conf.seekg(0, _file_conf.beg);
@@ -130,6 +133,16 @@ private:
 		return (true);
 	}
 
+	bool parse_logfiles(std::string file){
+		std::ofstream ofs(file.c_str(), std::ofstream::out | std::ofstream::app);
+		if(!ofs)
+		{
+			perror("Error :Can't open or create a log file");
+			return false;
+		}
+		ofs.close();
+		return true;
+	}
 	void	parse_config_methode( void ) {
 		int	pos = _data_conf.find_first_not_of(" \t\n\r");
 		_data_conf = _data_conf.substr(pos);
