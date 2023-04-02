@@ -24,10 +24,10 @@
 # include <sys/wait.h>
 # include <fcntl.h>
 
+class Parser;
 class Server;
 class Client;
 
-int	_nb_client = 0;
 
 const std::string	g_month[] = {	"Jan", "Feb", "Mar", "Apr", \
 									"May", "Jun", "Jul", "Aug", \
@@ -35,8 +35,15 @@ const std::string	g_month[] = {	"Jan", "Feb", "Mar", "Apr", \
 
 const std::string	g_array_method[] = {"GET", "HEAD", "POST", \
 										"OPTIONS", "CONNECT", "TRACE", \
-										"PUT", "PATCH", "DELETE" } ;
+										"PUT", "PATCH", "DELETE" };
 
+const std::string	g_config_methode[] = {	"listen", "server_name", "root", \
+											"index", "error_log", "access_log", \
+											"error_page", "limit_request", \
+											"method_lists", "cgi_php", "#", ""};
+
+
+# include "parser.hpp"
 # include "client.hpp"
 # include "server.hpp"
 
