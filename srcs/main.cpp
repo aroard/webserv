@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 
 	Server	serv("127.0.0.1", parser[0]);
 
-	serv.start();
+	//serv.start();
 
 	return (0);
 }

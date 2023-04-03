@@ -197,12 +197,12 @@ private:
 		}
 		else {
 			if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0) {
-					perror("ERROR send");
+					perror("ERROR send1");
 			}
 			for (std::string line; std::getline(web_page, line);) { 
 				line += '\n';
 				if (send(_socketClient, line.c_str(), line.size(), 0) < 0) {
-					perror("ERROR send");
+					perror("ERROR send2");
 				}
 			}
 		}

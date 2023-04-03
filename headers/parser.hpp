@@ -27,8 +27,6 @@ public:
 			perror(_path_conf.c_str());
 			exit(EXIT_FAILURE);
 		}
-		if (!parse_logfiles("./logs/acess.log") || !parse_logfiles("./logs/error.log"))
-			exit(EXIT_FAILURE);
 		_file_conf.seekg(0, _file_conf.end);
 		int	length = _file_conf.tellg();
 		_file_conf.seekg(0, _file_conf.beg);
@@ -92,6 +90,16 @@ private:
 			return (false);
 		}
 		ofs.close();
+		return (true);
+	}
+
+	bool	parse_files( std::string file ) {
+		std::ifstream ifs(file.c_str());
+		if (!ifs) {
+			perror(std::string(file).c_str());
+			return (false);
+		}
+		ifs.close();
 		return (true);
 	}
 
@@ -247,6 +255,51 @@ private:
 		_port.push_back(std::pair<int, std::list<int> >(port.first, ls));
 	}
 
+bool	setting_server_name(std::string name)
+{
+	std::string host = "/etc/hosts";
+	std::string host2 = "/etc/hosts.new";
+    std::string line;
+    std::ifstream ifs(host.c_str());
+    std::ofstream ofs(host2.c_str(), std::ofstream::trunc);
+    int i = 0;
+
+    if(!ofs || !ifs || name.size() < 1)
+    {
+			if (!ofs)
+				std::cout << "Error: ofs could not create" << std::endl;
+			if (!ifs)
+				std::cout << "Error: ifs could not open" << std::endl;
+			if (name.size() < 1)
+				std::cout << "Error: server name must be atleast 1 character" << std::endl;
+			return false;
+		}
+
+		while(std::getline(ifs, line))
+		{
+			if (!i)
+				ofs << line + " " + name << std::endl;
+			else
+				ofs << line << std::endl;
+			i++;
+		}
+
+		ifs.close();
+		ofs.close();
+
+		if (std::remove(host.c_str()) != 0)
+		{
+			std::cout << "could not remove the folder :" + host << std::endl;
+			return false;
+		}
+		if (std::rename(host2.c_str(), host.c_str()) != 0)
+		{
+			std::cout << "could not rename the folder :" + host2 << std::endl;
+			return false;
+		}
+		return true;
+}
+
 	void	set_server_name( std::string &tmp ) {
 		std::pair<int, std::list<std::string> > server_name = parse_template_set(tmp);
 		if (server_name.second.size() != 1) {
@@ -254,6 +307,8 @@ private:
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
 		}
+		if(setting_server_name(server_name.second.front()) == false)
+			exit(EXIT_FAILURE);
 		_server_name.push_back(std::pair<int, std::string>(server_name.first, server_name.second.front()));
 		return ;
 	}
@@ -265,6 +320,9 @@ private:
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
 		}
+
+		if(!parse_files(root.second.front()))
+			exit(EXIT_FAILURE);
 		_root.push_back(std::pair<int, std::string>(root.first, root.second.front()));
 		return ;
 	}
@@ -281,6 +339,8 @@ private:
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
 		}
+		if (!parse_logfiles(error_log.second.front()))
+			exit(EXIT_FAILURE);
 		_error_log.push_back(std::pair<int, std::string>(error_log.first, error_log.second.front()));
 		return ;
 	}
@@ -292,6 +352,8 @@ private:
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
 		}
+		if (!parse_logfiles(access_log.second.front()))
+			exit(EXIT_FAILURE);
 		_access_log.push_back(std::pair<int, std::string>(access_log.first, access_log.second.front()));
 		return ;
 	}
@@ -303,6 +365,10 @@ private:
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
 		}
+		if (error_page.second.front() != "./www/error_pages/NotFound.html"){
+			std::cout << "Wrong path for error_page" << std::endl; exit(EXIT_FAILURE);}
+		if(!parse_files(error_page.second.front()))
+			exit(EXIT_FAILURE);
 		_error_page.push_back(std::pair<int, std::string>(error_page.first, error_page.second.front()));
 		return ;
 	}
@@ -329,6 +395,10 @@ private:
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
 		}
+		if (cgi_php.second.front() != "./cgi_bin/php-cgi"){
+			std::cout << "Wrong path for cgi_php" << std::endl; exit(EXIT_FAILURE);}
+		if (!parse_files(cgi_php.second.front()))
+			exit(EXIT_FAILURE);
 		_cgi_php.push_back(std::pair<int, std::string>(cgi_php.first, cgi_php.second.front()));
 		return ;
 	}
