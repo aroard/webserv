@@ -23,6 +23,8 @@
 # include <sys/types.h>
 # include <sys/wait.h>
 # include <fcntl.h>
+# include <sys/event.h>
+# include <sys/time.h>
 
 class Parser;
 class Server;

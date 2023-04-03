@@ -30,17 +30,17 @@ public:
 private:
 
 	void	routine( void ) {
-
+		std::cout << __LINE__ << std::endl;
 		char	*msg = new char[_parser.get_limit_request(0) + 1];
 
 		std::memset(msg, 0, _parser.get_limit_request(0));
-		
+		std::cout << __LINE__ << std::endl;
 		if (recv(_socketClient, msg, _parser.get_limit_request(0), 0) < 0) {
 			perror("ERROR recv"); exit(EXIT_FAILURE);
 		}
-		
+		std::cout << __LINE__ << std::endl;
 		parse_request_http(msg);
-		
+		std::cout << __LINE__ << std::endl;
 		return ;
 	}
 
@@ -50,6 +50,8 @@ private:
 		std::stringstream	ss(msg);
 		std::string			line;
 		size_t				pos;
+
+		std::cout << "[" << msg << "]" << std::endl;
 
 		if (std::getline(ss, line)) {
 			pos = line.find(' ');
@@ -95,7 +97,6 @@ private:
 		std::ifstream		file_tmp;
 		std::string			array_index[] = {"index.html", "index.htm", "test.html", "index.php", "test/index.html"};
 		int					i = 0;
-
 		open.open(path.c_str());
 		if (open) {
 			if (path.at(path.size() - 1) != '/') {
@@ -112,18 +113,12 @@ private:
 				} while (i != 5 && !open.is_open());
 			}
 		}
-		if (open.is_open()) {
-			msg = "HTTP/1.1 200 OK\nContent-type: text/html; charset=UTF-8\nServer:" \
-					+ _parser.get_server_name(0) + "\n\n";
-			i = 200;
-		}
-		else {
-			msg = "HTTP/1.1 404 Not Found\nContent-type: text/html; charset=UTF-8\nServer:" \
-					+ _parser.get_server_name(0) + "\n\n";
-			open.open(_parser.get_error_page(0).c_str());
-			i = 404;
-		}
-		return i;
+		if (open.is_open())
+			return (200);
+		msg = "HTTP/1.1 404 Not Found\nContent-type: text/html; charset=UTF-8\nServer:" \
+				+ _parser.get_server_name(0) + "\nConnection: close\n\n";
+		open.open(_parser.get_error_page(0).c_str());
+		return (404);
 	}
 
 
@@ -163,7 +158,8 @@ private:
 		char	tmp[32];
 
 		std::memset(tmp, 0, 31);
-		msg = "HTTP/1.1 200 OK\nServer:" + _parser.get_server_name(0) + "\n\n";
+		msg = "HTTP/1.1 200 OK\nServer:" + _parser.get_server_name(0) + \
+				"\nConnection: close\n";
 		if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0) {
 			perror("ERROR send");
 		}
@@ -196,6 +192,9 @@ private:
 			execute_cgi_php(path, msg);
 		}
 		else {
+			if (error_code != 404)
+				msg = "HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\nConnection: close\n\n";
+				std::cout << msg << std::endl;
 			if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0) {
 					perror("ERROR send1");
 			}

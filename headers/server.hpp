@@ -7,7 +7,7 @@ class Server
 	typedef	struct sockaddr_in	sockaddr_in;
 private:
 	sockaddr_in		_confServer;
-	int				_socketServer;
+	std::list<int>	_socketServer;
 	int				_socketClient;
 	std::string		_addr;
 	const Parser	_parser;
@@ -16,29 +16,39 @@ public:
 
 	explicit Server ( std::string addr = "127.0.0.1", Parser parser = Parser(1, NULL) ) \
 		: _addr(addr), _parser(parser) {
-		if ((_socketServer = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
-			perror("ERROR socket"); exit(EXIT_FAILURE);
-		}
-		if ((_confServer.sin_addr.s_addr = inet_addr(_addr.c_str())) == 0) {
-			perror("ERROR inet_addr"); exit(EXIT_FAILURE);
-		}
-		_confServer.sin_family = AF_INET;
-		_confServer.sin_port = htons(_parser.get_port(0).front());
 
-		if (bind(_socketServer, (const struct sockaddr *)&_confServer, \
-				sizeof(_confServer)) < 0) {
-			perror("ERROR bind"); exit (EXIT_FAILURE);
-		}
+		std::list<int>	ls = _parser.get_port(0);
+		int				socketServer;
 
-		if (listen(_socketServer, 10) < 0) {
-			perror("ERROR listen"); exit (EXIT_FAILURE);
+		for (std::list<int>::iterator it = ls.begin(); it != ls.end(); ++it) {
+
+			if ((socketServer = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+				perror("ERROR socket"); exit(EXIT_FAILURE);
+			}
+			if ((_confServer.sin_addr.s_addr = inet_addr(_addr.c_str())) == 0) {
+				perror("ERROR inet_addr"); exit(EXIT_FAILURE);
+			}
+			_confServer.sin_family = AF_INET;
+			_confServer.sin_port = htons(*it);
+
+			if (bind(socketServer, (const struct sockaddr *)&_confServer, \
+					sizeof(_confServer)) < 0) {
+				perror("ERROR bind"); exit (EXIT_FAILURE);
+			}
+
+			if (listen(socketServer, 10) < 0) {
+				perror("ERROR listen"); exit (EXIT_FAILURE);
+			}
+			_socketServer.push_back(socketServer);
 		}
 		std::cout << "Constructor Server called" << std::endl;
 	}
 
 	~Server() {
 		
-		close(_socketServer);
+		for (std::list<int>::iterator it = _socketServer.begin(); \
+			it != _socketServer.end(); ++it)
+			close(*it);
 
 		std::cout << "Destructor Server called" << std::endl;
 	}
@@ -51,51 +61,42 @@ private:
 
 	void	routine_server( void ) {
 		std::cout << "Server is starting" << std::endl;
-
-		int	epoll_fd;
-
-		if ((epoll_fd = epoll_create1(0)) < 0) {
-			perror("ERROR epoll_create1"); exit(EXIT_FAILURE);
+		int kq = kqueue();
+		if (kq < 0) {
+			perror("ERROR kqueue"); exit(EXIT_FAILURE);
 		}
 
-		struct epoll_event ev;
-
-		ev.data.fd = _socketServer;
-		ev.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP;
-
-		if (epoll_ctl(epoll_fd, \
-			EPOLL_CTL_ADD, _socketServer, &ev) < 0) {
-			perror("ERROR epoll_ctl"); exit(EXIT_FAILURE);
+		struct kevent 	*ev_set = new struct kevent[_socketServer.size()];
+		int				i = 0;
+		for (std::list<int>::iterator it = _socketServer.begin(); \
+			it != _socketServer.end(); ++it, ++i)
+			EV_SET(&ev_set[i], *it, EVFILT_READ, EV_ADD, \
+				0, 0, 0);
+		if (kevent(kq, ev_set, _socketServer.size(), NULL, 0, NULL) < 0) {
+			perror("ERROR kevent set"); exit(EXIT_FAILURE);
 		}
 
-		struct epoll_event 	events[10];
-		int					nfds;
-		pthread_t			thread;
+		int				nfds;
 
 		while (true) {
 
-			if ((nfds = epoll_wait(epoll_fd, events, 10, 0)) < 0) {
-				perror("ERROR epoll_wait"); exit(EXIT_FAILURE);
-			}
+			struct kevent	*ev_get = new struct kevent[_socketServer.size()];
 
-			for (int i = 0, a = 0; i < nfds; ++i) {
-				if (events[i].events == EPOLLIN) {
-					create_client();
-				}
-				else if (events[i].events == EPOLLRDHUP) {
-					std::cout << "Disconnected" << std::endl;
-					exit(EXIT_SUCCESS);
+			if ((nfds = kevent(kq, NULL, 0, ev_get, _socketServer.size(), \
+				NULL)) < 0) {
+				perror("ERROR kevent get"); exit(EXIT_FAILURE);
+			}
+			std::cout << nfds << std::endl;
+			for (int i = 0; i < nfds; ++i) {
+				if (ev_get[i].filter == EVFILT_READ) {
+					Client	cl(ev_get[i].ident, _parser);
+					cl.run();
 				}
 			}
+			delete[] ev_get;
+			ev_get = NULL;
 
 		}
-		return ;
-	}
-
-	void	create_client( void ) {
-		
-		Client	cl(_socketServer, _parser);
-		cl.run();
 		return ;
 	}
 

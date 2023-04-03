@@ -1,6 +1,8 @@
 CC = c++
 
-CFLAGS = -std=c++98 #-Wall -Werror -Wextra
+CFLAGS = -I/usr/include/kqueue/ \
+		 -std=c++98 #-Wall -Werror -Wextra
+IFLAGS = -L/usr/local/lib -lkqueue
 
 OBJ_DIR = obj/
 
@@ -13,7 +15,7 @@ NAME = webserver
 all : mkdir_obj $(NAME)
 
 $(NAME) : $(PREFIXE)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ $(IFLAGS)
 
 $(OBJ_DIR)%.o : ./srcs/%.cpp
 	$(CC) -o $@ -c $< $(CFLAGS)
@@ -35,3 +37,6 @@ rr : re r
 
 r : all
 	./$(NAME)
+
+install:
+	apt-get install -y libkqueue-dev
