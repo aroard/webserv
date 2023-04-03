@@ -23,7 +23,7 @@ public:
 			perror("ERROR inet_addr"); exit(EXIT_FAILURE);
 		}
 		_confServer.sin_family = AF_INET;
-		_confServer.sin_port = htons(_parser.get_port(0));
+		_confServer.sin_port = htons(_parser.get_port(0).front());
 
 		if (bind(_socketServer, (const struct sockaddr *)&_confServer, \
 				sizeof(_confServer)) < 0) {
@@ -43,15 +43,13 @@ public:
 		std::cout << "Destructor Server called" << std::endl;
 	}
 
-	pthread_t	start( void ) {
-		pthread_t				thread; 
-		pthread_create(&thread, NULL, routine_server, (void *)this);
-		return thread;
+	void	start( void ) {
+		routine_server();
 	}
 
 private:
 
-	static void	*routine_server( void *server ) {
+	void	routine_server( void ) {
 		std::cout << "Server is starting" << std::endl;
 
 		int	epoll_fd;
@@ -62,11 +60,11 @@ private:
 
 		struct epoll_event ev;
 
-		ev.data.fd = (*(Server *)server)._socketServer;
+		ev.data.fd = _socketServer;
 		ev.events = EPOLLIN | EPOLLOUT | EPOLLRDHUP;
 
 		if (epoll_ctl(epoll_fd, \
-			EPOLL_CTL_ADD, (*(Server *)server)._socketServer, &ev) < 0) {
+			EPOLL_CTL_ADD, _socketServer, &ev) < 0) {
 			perror("ERROR epoll_ctl"); exit(EXIT_FAILURE);
 		}
 
@@ -82,8 +80,7 @@ private:
 
 			for (int i = 0, a = 0; i < nfds; ++i) {
 				if (events[i].events == EPOLLIN) {
-					pthread_create(&thread, NULL, create_client, server);
-					pthread_detach(thread);
+					create_client();
 				}
 				else if (events[i].events == EPOLLRDHUP) {
 					std::cout << "Disconnected" << std::endl;
@@ -92,15 +89,14 @@ private:
 			}
 
 		}
-		pthread_exit(NULL);
+		return ;
 	}
 
-	static void	*create_client( void *server ) {
+	void	create_client( void ) {
 		
-		Client	cl((*(Server *)server)._socketServer, \
-					(*(Server *)server)._parser);
+		Client	cl(_socketServer, _parser);
 		cl.run();
-		pthread_exit(NULL);
+		return ;
 	}
 
 };

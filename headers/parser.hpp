@@ -29,7 +29,6 @@ public:
 		}
 		if (!parse_logfiles("./logs/acess.log") || !parse_logfiles("./logs/error.log"))
 			exit(EXIT_FAILURE);
-
 		_file_conf.seekg(0, _file_conf.end);
 		int	length = _file_conf.tellg();
 		_file_conf.seekg(0, _file_conf.beg);
@@ -71,20 +70,31 @@ public:
 		if (i >= _nb_conf_serv)
 			return (new_parser);
 		new_parser._nb_conf_serv = 1;
-		new_parser._port.push_back(std::pair<int, int>(1, get_port(i)));
+		new_parser._port.push_back(std::pair<int, std::list<int> >(1, get_port(i)));
 		new_parser._server_name.push_back(std::pair<int, std::string>(1, get_server_name(i)));
 		new_parser._root.push_back(std::pair<int, std::string>(1, get_root(i)));
-		new_parser._index.push_back(std::pair<int, std::string>(1, get_index(i)));
+		new_parser._index.push_back(std::pair<int, std::list<std::string> >(1, get_index(i)));
 		new_parser._error_log.push_back(std::pair<int, std::string>(1, get_error_log(i)));
 		new_parser._access_log.push_back(std::pair<int, std::string>(1, get_access_log(i)));
 		new_parser._error_page.push_back(std::pair<int, std::string>(1, get_error_page(i)));
-		new_parser._limit_request.push_back(std::pair<int, std::string>(1, get_limit_request(i)));
-		new_parser._method_lists.push_back(std::pair<int, std::string>(1, get_method_lists(i)));
+		new_parser._limit_request.push_back(std::pair<int, int>(1, get_limit_request(i)));
+		new_parser._method_lists.push_back(std::pair<int, std::list<std::string> >(1, get_method_lists(i)));
 		new_parser._cgi_php.push_back(std::pair<int, std::string>(1, get_cgi_php(i)));
 		return (new_parser);
 	}
 
 private:
+
+	bool	parse_logfiles( std::string file ) {
+		std::ofstream ofs(file.c_str(), std::ofstream::out | std::ofstream::app);
+		if (!ofs) {
+			perror("Error: Can't open or create a log file");
+			return (false);
+		}
+		ofs.close();
+		return (true);
+	}
+
 
 	void	parse_all_file( void ) {
 		if (!_nb_conf_serv++)
@@ -94,6 +104,7 @@ private:
 			parse_all_file();
 		return ;
 	}
+
 
 	bool	parse_methode_server( void ) {
 		int	pos = _data_conf.find("server");
@@ -133,16 +144,7 @@ private:
 		return (true);
 	}
 
-	bool parse_logfiles(std::string file){
-		std::ofstream ofs(file.c_str(), std::ofstream::out | std::ofstream::app);
-		if(!ofs)
-		{
-			perror("Error :Can't open or create a log file");
-			return false;
-		}
-		ofs.close();
-		return true;
-	}
+
 	void	parse_config_methode( void ) {
 		int	pos = _data_conf.find_first_not_of(" \t\n\r");
 		_data_conf = _data_conf.substr(pos);
@@ -181,64 +183,89 @@ private:
 		return ;
 	}
 
+	void	too_more_config_method( std::string func ) {
+		std::cerr << "Syntax error: " << __FUNCTION__
+			<< ": " << __LINE__ << ": " << func << std::endl;
+			exit(EXIT_FAILURE);
+	}
+
+
 	void	set_config_methode( std::string &tmp , int i) {
 		switch (i) {
-			case 0: set_listen(tmp); break ;
-			case 1: set_server_name(tmp); break ;
-			case 2: set_root(tmp); break ;
-			case 3: set_index(tmp); break ;
-			case 4: set_error_log(tmp); break ;
-			case 5: set_access_log(tmp); break ;
-			case 6: set_error_page(tmp); break ;
-			case 7: set_limit_request(tmp); break ;
-			case 8: set_method_lists(tmp); break ;
-			case 9: set_cgi_php(tmp); break ;
+			case 0: if (_port.size() < _nb_conf_serv) set_listen(tmp); else too_more_config_method("set_listen"); break ;
+			case 1: if (_server_name.size() < _nb_conf_serv) set_server_name(tmp); else too_more_config_method("set_server_name"); break ;
+			case 2: if (_root.size() < _nb_conf_serv) set_root(tmp); else too_more_config_method("set_root"); break ;
+			case 3: if (_index.size() < _nb_conf_serv) set_index(tmp); else too_more_config_method("set_index"); break ;
+			case 4: if (_error_log.size() < _nb_conf_serv) set_error_log(tmp); else too_more_config_method("set_error_log"); break ;
+			case 5: if (_access_log.size() < _nb_conf_serv) set_access_log(tmp); else too_more_config_method("set_access_log"); break ;
+			case 6: if (_error_page.size() < _nb_conf_serv) set_error_page(tmp); else too_more_config_method("set_error_page"); break ;
+			case 7: if (_limit_request.size() < _nb_conf_serv) set_limit_request(tmp); else too_more_config_method("set_limit_request"); break ;
+			case 8: if (_method_lists.size() < _nb_conf_serv) set_method_lists(tmp); else too_more_config_method("set_method_lists"); break ;
+			case 9: if (_cgi_php.size() < _nb_conf_serv) set_cgi_php(tmp); else too_more_config_method("set_cgi_php"); break ;
 			case 10: set_comment_line(tmp); break ;
 		}
 		return ;
 	}
 
-	std::vector<std::pair<int, int> >			_port;
-	std::vector<std::pair<int, std::string> >	_server_name;
-	std::vector<std::pair<int, std::string> >	_root;
-	std::vector<std::pair<int, std::string> >	_index;
-	std::vector<std::pair<int, std::string> >	_error_log;
-	std::vector<std::pair<int, std::string> >	_access_log;
-	std::vector<std::pair<int, std::string> >	_error_page;
-	std::vector<std::pair<int, std::string> >	_limit_request;
-	std::vector<std::pair<int, std::string> >	_method_lists;
-	std::vector<std::pair<int, std::string> >	_cgi_php;
+	std::vector<std::pair<int, std::list<int> > >			_port;
+	std::vector<std::pair<int, std::string> >				_server_name;
+	std::vector<std::pair<int, std::string> >				_root;
+	std::vector<std::pair<int, std::list<std::string> > >	_index;
+	std::vector<std::pair<int, std::string> >				_error_log;
+	std::vector<std::pair<int, std::string> >				_access_log;
+	std::vector<std::pair<int, std::string> >				_error_page;
+	std::vector<std::pair<int, int> >						_limit_request;
+	std::vector<std::pair<int, std::list<std::string> > >	_method_lists;
+	std::vector<std::pair<int, std::string> >				_cgi_php;
 
-	std::pair<int, std::string>	parse_template_set( std::string &tmp ) {
+	std::pair<int, std::list<std::string> >	parse_template_set( std::string &tmp ) {
 		int	pos = _data_conf.find(";") - tmp.size();
 		if (pos == -1) {
 			std::cerr << "Syntax error: " << __FUNCTION__
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		return (std::pair<int, std::string>(_nb_conf_serv, 
-				_data_conf.substr(tmp.size() + 1, pos - 1)));
+		std::stringstream			ss(_data_conf.substr(tmp.size() + 1, pos - 1));
+		std::list<std::string>		ls;
+
+		for (std::string line; std::getline(ss, line, ' '); ls.push_back(line));
+		return (std::pair<int, std::list<std::string> >(_nb_conf_serv, ls));
 	}
 
 	void	set_listen( std::string &tmp ) {
-		std::pair<int, std::string> port = parse_template_set(tmp);
-		if (port.second.find_first_not_of("-+0123456789") != -1) {
+		std::pair<int, std::list<std::string> >	port = parse_template_set(tmp);
+		std::list<int>							ls;
+		for (std::list<std::string>::iterator it = port.second.begin();
+			it != port.second.end(); ++it) {
+			if (it->find_first_not_of("-+0123456789") != -1) {
+				std::cerr << "Syntax error: " << __FUNCTION__
+					<< ": " << __LINE__ << std::endl;
+				exit(EXIT_FAILURE);
+			}
+			ls.push_back(atoi(it->c_str()));
+		}
+		_port.push_back(std::pair<int, std::list<int> >(port.first, ls));
+	}
+
+	void	set_server_name( std::string &tmp ) {
+		std::pair<int, std::list<std::string> > server_name = parse_template_set(tmp);
+		if (server_name.second.size() != 1) {
 			std::cerr << "Syntax error: " << __FUNCTION__
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		_port.push_back(std::pair<int, int>(port.first, 
-			atoi(port.second.c_str())));
-		return ;
-	}
-
-	void	set_server_name( std::string &tmp ) {
-		_server_name.push_back(parse_template_set(tmp));
+		_server_name.push_back(std::pair<int, std::string>(server_name.first, server_name.second.front()));
 		return ;
 	}
 
 	void	set_root( std::string &tmp ) {
-		_root.push_back(parse_template_set(tmp));
+		std::pair<int, std::list<std::string> > root = parse_template_set(tmp);
+		if (root.second.size() != 1) {
+			std::cerr << "Syntax error: " << __FUNCTION__
+				<< ": " << __LINE__ << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		_root.push_back(std::pair<int, std::string>(root.first, root.second.front()));
 		return ;
 	}
 
@@ -248,23 +275,46 @@ private:
 	}
 
 	void	set_error_log( std::string &tmp ) {
-		_error_log.push_back(parse_template_set(tmp));
+		std::pair<int, std::list<std::string> > error_log = parse_template_set(tmp);
+		if (error_log.second.size() != 1) {
+			std::cerr << "Syntax error: " << __FUNCTION__
+				<< ": " << __LINE__ << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		_error_log.push_back(std::pair<int, std::string>(error_log.first, error_log.second.front()));
 		return ;
 	}
 
 	void	set_access_log( std::string &tmp ) {
-		_access_log.push_back(parse_template_set(tmp));
+		std::pair<int, std::list<std::string> > access_log = parse_template_set(tmp);
+		if (access_log.second.size() != 1) {
+			std::cerr << "Syntax error: " << __FUNCTION__
+				<< ": " << __LINE__ << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		_access_log.push_back(std::pair<int, std::string>(access_log.first, access_log.second.front()));
 		return ;
 	}
 
 	void	set_error_page( std::string &tmp ) {
-		_error_page.push_back(parse_template_set(tmp));
+		std::pair<int, std::list<std::string> > error_page = parse_template_set(tmp);
+		if (error_page.second.size() != 1) {
+			std::cerr << "Syntax error: " << __FUNCTION__
+				<< ": " << __LINE__ << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		_error_page.push_back(std::pair<int, std::string>(error_page.first, error_page.second.front()));
 		return ;
 	}
 
 	void	set_limit_request( std::string &tmp ) {
-		_limit_request.push_back(parse_template_set(tmp));
-		return ;
+		std::pair<int, std::list<std::string> > limit_request = parse_template_set(tmp);
+		if (limit_request.second.size() != 1 || limit_request.second.front().find_first_not_of("-+0123456789") != -1) {
+			std::cerr << "Syntax error: " << __FUNCTION__
+				<< ": " << __LINE__ << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		_limit_request.push_back(std::pair<int, int>(limit_request.first, atoi(limit_request.second.front().c_str())));
 	}
 	
 	void	set_method_lists( std::string &tmp ) {
@@ -273,7 +323,13 @@ private:
 	}
 	
 	void	set_cgi_php( std::string &tmp ) {
-		_cgi_php.push_back(parse_template_set(tmp));
+		std::pair<int, std::list<std::string> > cgi_php = parse_template_set(tmp);
+		if (cgi_php.second.size() != 1) {
+			std::cerr << "Syntax error: " << __FUNCTION__
+				<< ": " << __LINE__ << std::endl;
+			exit(EXIT_FAILURE);
+		}
+		_cgi_php.push_back(std::pair<int, std::string>(cgi_php.first, cgi_php.second.front()));
 		return ;
 	}
 
@@ -284,13 +340,13 @@ private:
 
 public:
 
-	std::vector<std::pair<int, int> >			
+	std::vector<std::pair<int, std::list<int> > >			
 	get_port( void ) { return (_port); }
 	std::vector<std::pair<int, std::string> >	
 	get_server_name( void ) { return (_server_name); }
 	std::vector<std::pair<int, std::string> >	
 	get_root( void ) { return (_root); }
-	std::vector<std::pair<int, std::string> >	
+	std::vector<std::pair<int, std::list<std::string> > >	
 	get_index( void ) { return (_index); }
 	std::vector<std::pair<int, std::string> >	
 	get_error_log( void ) { return (_error_log); }
@@ -298,16 +354,16 @@ public:
 	get_access_log( void ) { return (_access_log); }
 	std::vector<std::pair<int, std::string> >	
 	get_error_page( void ) { return (_error_page); }
-	std::vector<std::pair<int, std::string> >	
+	std::vector<std::pair<int, int> >	
 	get_limit_request( void ) { return (_limit_request); }
-	std::vector<std::pair<int, std::string> >	
+	std::vector<std::pair<int, std::list<std::string> > >	
 	get_method_lists( void ) { return (_method_lists); }
 	std::vector<std::pair<int, std::string> >	
 	get_cgi_php( void ) { return (_cgi_php); }
 
 	int				get_nb_conf_serv( void ) const { return (_nb_conf_serv); }
-	int				get_port( size_t num_conf ) const {
-		return (_port.empty() ? int() : num_conf < _port.back().first ? _port[num_conf].second : int()); 
+	std::list<int>	get_port( size_t num_conf ) const {
+		return (_port.empty() ? std::list<int>() : num_conf < _port.back().first ? _port[num_conf].second :  std::list<int>()); 
 	}
 	std::string		get_server_name( size_t num_conf ) const {
 		return (_server_name.empty() ? std::string() : num_conf < _server_name.back().first ? _server_name[num_conf].second : std::string()); 
@@ -315,8 +371,8 @@ public:
 	std::string		get_root( size_t num_conf ) const {
 		return (_root.empty() ? std::string() : num_conf < _root.back().first ? _root[num_conf].second : std::string()); 
 	}
-	std::string		get_index( size_t num_conf ) const {
-		return (_index.empty() ? std::string() : num_conf < _index.back().first ? _index[num_conf].second : std::string()); 
+	std::list<std::string>		get_index( size_t num_conf ) const {
+		return (_index.empty() ? std::list<std::string>() : num_conf < _index.back().first ? _index[num_conf].second : std::list<std::string>()); 
 	}
 	std::string		get_error_log( size_t num_conf ) const {
 		return (_error_log.empty() ? std::string() : num_conf < _error_log.back().first ? _error_log[num_conf].second : std::string()); 
@@ -327,11 +383,11 @@ public:
 	std::string		get_error_page( size_t num_conf ) const {
 		return (_error_page.empty() ? std::string() : num_conf < _error_page.back().first ? _error_page[num_conf].second : std::string());
 	}
-	std::string		get_limit_request( size_t num_conf ) const {
-		return (_limit_request.empty() ? std::string() : num_conf < _limit_request.back().first ? _limit_request[num_conf].second : std::string());
+	int				get_limit_request( size_t num_conf ) const {
+		return (_limit_request.empty() ? int() : num_conf < _limit_request.back().first ? _limit_request[num_conf].second : int());
 	}
-	std::string		get_method_lists( size_t num_conf ) const {
-		return (_method_lists.empty() ? std::string() : num_conf < _method_lists.back().first ? _method_lists[num_conf].second : std::string());
+	std::list<std::string>		get_method_lists( size_t num_conf ) const {
+		return (_method_lists.empty() ? std::list<std::string>() : num_conf < _method_lists.back().first ? _method_lists[num_conf].second : std::list<std::string>());
 	}
 	std::string		get_cgi_php( size_t num_conf ) const {
 		return (_cgi_php.empty() ? std::string() : num_conf < _cgi_php.back().first ? _cgi_php[num_conf].second : std::string());
@@ -342,15 +398,21 @@ public:
 std::ostream&	operator<<( std::ostream &o, const Parser &p) {
 	for (int i = 0; i < p.get_nb_conf_serv(); ++i) {
 		std::cout << "---------------- CONFIG " << i << " ----------------" << std::endl;
-		std::cout << "Port[" << i << "]\t\t\t: " << p.get_port(i) << std::endl;
+		std::cout << "Port[" << i << "]\t\t\t: "; { std::list<int> ls = p.get_port(i);
+		for (std::list<int>::iterator it = ls.begin(); it != ls.end(); ++it)
+			std::cout << "(" << *it << ")"; std::cout << std::endl; }
 		std::cout << "Server_name[" << i << "]\t\t: " << p.get_server_name(i) << std::endl;
 		std::cout << "Root[" << i << "]\t\t\t: " << p.get_root(i) << std::endl;
-		std::cout << "Index[" << i << "]\t\t: " << p.get_index(i) << std::endl;
+		std::cout << "Index[" << i << "]\t\t: "; { std::list<std::string> ls = p.get_index(i);
+		for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it)
+			std::cout << "(" << *it << ")"; std::cout << std::endl; }
 		std::cout << "Error_log[" << i << "]\t\t: " << p.get_error_log(i) << std::endl;
 		std::cout << "Access_log[" << i << "]\t\t: " << p.get_access_log(i) << std::endl;
 		std::cout << "Error_page[" << i << "]\t\t: " << p.get_error_page(i) << std::endl;
 		std::cout << "Limit_request[" << i << "]\t: " << p.get_limit_request(i) << std::endl;
-		std::cout << "Method_request[" << i << "]\t: " << p.get_method_lists(i) << std::endl;
+		std::cout << "Method_request[" << i << "]\t: "; { std::list<std::string> ls = p.get_method_lists(i);
+		for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it)
+			std::cout << "(" << *it << ")"; std::cout << std::endl; }
 		std::cout << "Cgi_php[" << i << "]\t\t: " << p.get_cgi_php(i) << std::endl;
 		std::cout << "------------------------------------------" << std::endl;
 	}
