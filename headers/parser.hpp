@@ -1,5 +1,6 @@
 #ifndef __PARSER_HPP__
 # define __PARSER_HPP__
+void parse_all_parameters(void);
 
 class Parser
 {
@@ -103,13 +104,18 @@ private:
 		return (true);
 	}
 
-
 	void	parse_all_file( void ) {
 		if (!_nb_conf_serv++)
 			parse_methode_server();
 		parse_config_methode();
 		if (parse_methode_server())
+		{
+			parse_all_parameters();
 			parse_all_file();
+		}
+		else
+			parse_all_parameters();
+		
 		return ;
 	}
 
@@ -255,17 +261,16 @@ private:
 		_port.push_back(std::pair<int, std::list<int> >(port.first, ls));
 	}
 
-bool	setting_server_name(std::string name)
-{
-	std::string host = "/etc/hosts";
-	std::string host2 = "/etc/hosts.new";
-    std::string line;
-    std::ifstream ifs(host.c_str());
-    std::ofstream ofs(host2.c_str(), std::ofstream::trunc);
-    int i = 0;
+	bool	setting_server_name(std::string name){
+		std::string host = "/etc/hosts";
+		std::string host2 = "/etc/hosts.new";
+		std::string line;
+		std::ifstream ifs(host.c_str());
+		std::ofstream ofs(host2.c_str(), std::ofstream::trunc);
+		int i = 0;
 
-    if(!ofs || !ifs || name.size() < 1)
-    {
+		if(!ofs || !ifs || name.size() < 1)
+		{
 			if (!ofs)
 				std::cout << "Error: ofs could not create" << std::endl;
 			if (!ifs)
@@ -274,11 +279,23 @@ bool	setting_server_name(std::string name)
 				std::cout << "Error: server name must be atleast 1 character" << std::endl;
 			return false;
 		}
-
+		
 		while(std::getline(ifs, line))
 		{
 			if (!i)
-				ofs << line + " " + name << std::endl;
+			{
+				if (line.find(" " + name + " ") == std::string::npos)
+						ofs << line + " " + name + " " << std::endl;
+				else
+				{
+					if (std::remove(host2.c_str()) != 0){
+						std::cout << "could not remove the folder :" + host2 << std::endl;
+						return false;}				
+					ifs.close();
+					ofs.close();
+					return true;
+				}
+			}
 			else
 				ofs << line << std::endl;
 			i++;
@@ -298,7 +315,7 @@ bool	setting_server_name(std::string name)
 			return false;
 		}
 		return true;
-}
+	}
 
 	void	set_server_name( std::string &tmp ) {
 		std::pair<int, std::list<std::string> > server_name = parse_template_set(tmp);
@@ -463,7 +480,15 @@ public:
 		return (_cgi_php.empty() ? std::string() : num_conf < _cgi_php.back().first ? _cgi_php[num_conf].second : std::string());
 	}
 
+void parse_all_parameters(void)
+{
+	if (get_root().empty())
+	{
+		return;
+	}
+}
 };
+
 
 std::ostream&	operator<<( std::ostream &o, const Parser &p) {
 	for (int i = 0; i < p.get_nb_conf_serv(); ++i) {
