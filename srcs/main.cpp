@@ -7,9 +7,9 @@ int main(int argc, char **argv)
 
 	std::cout << parser << std::endl;
 
-	// Server	serv("127.0.0.1", parser[0]);
+	//Server	serv("127.0.0.1", parser[0]);
 
-	// serv.start();
+	//serv.start();
 
 	return (0);
 }

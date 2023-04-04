@@ -249,7 +249,7 @@ private:
 		std::list<int>							ls;
 		for (std::list<std::string>::iterator it = port.second.begin();
 			it != port.second.end(); ++it) {
-			if (it->find_first_not_of("-+0123456789") != -1) {
+			if (it->find_first_not_of("0123456789") != -1) {
 				std::cerr << "Syntax error: " << __FUNCTION__
 					<< ": " << __LINE__ << std::endl;
 				exit(EXIT_FAILURE);
@@ -390,7 +390,7 @@ private:
 
 	void	set_limit_request( std::string &tmp ) {
 		std::pair<int, std::list<std::string> > limit_request = parse_template_set(tmp);
-		if (limit_request.second.size() != 1 || limit_request.second.front().find_first_not_of("-+0123456789") != -1) {
+		if (limit_request.second.size() != 1 || limit_request.second.front().find_first_not_of("0123456789") != -1) {
 			std::cerr << "Syntax error: " << __FUNCTION__
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
@@ -490,12 +490,54 @@ public:
 	// std::vector<std::pair<int, std::string> >				_cgi_php;
 
 	void	parse_all_parameters( void ) {
+		// port
+		if (get_server_name(_nb_conf_serv - 1).empty()) {
+			std::cout << "server name empty" << std::endl;
+			_server_name.push_back(std::pair<int, std::string>(_nb_conf_serv, "dinopoulet.42.fr"));
+			std::cout << get_server_name(_nb_conf_serv - 1) << std::endl;
+		}
 		if (get_root(_nb_conf_serv - 1).empty()) {
 			std::cout << "root empty" << std::endl;
 			_root.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www"));
 			std::cout << get_root(_nb_conf_serv - 1) << std::endl;
 		}
-		return ;
+		if (get_error_log(_nb_conf_serv - 1).empty()) {
+			std::cout << "error log empty" << std::endl;
+			_error_log.push_back(std::pair<int, std::string>(_nb_conf_serv, "./logs/error.log"));
+			std::cout << get_error_log(_nb_conf_serv - 1) << std::endl;
+		}
+		if (get_access_log(_nb_conf_serv - 1).empty()) {
+			std::cout << "access log empty" << std::endl;
+			_access_log.push_back(std::pair<int, std::string>(_nb_conf_serv, "./logs/access.log"));
+			std::cout << get_access_log(_nb_conf_serv - 1) << std::endl;
+		}
+		if (_limit_request.empty())
+			std::cout << " salut01" << std::endl;
+		if (!get_limit_request(_nb_conf_serv - 1)) {
+			std::cout << "limit request empty" << std::endl;
+			_limit_request.push_back(std::pair<int, int>(_nb_conf_serv, 4096));
+			std::cout << get_limit_request(_nb_conf_serv - 1) << std::endl;
+		}
+		// method list
+		{
+			std::list<std::string> ls = get_method_lists(_nb_conf_serv - 1);
+			for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it){
+				int a;
+				for (a = 0; a < (sizeof(g_array_method) / sizeof(g_array_method[0])); a++){
+					if (g_array_method[a] == *it)
+						break;
+				}		
+				if (a == (sizeof(g_array_method) / sizeof(g_array_method[0]))){
+					std::cout << "Invalid method list:" << *it << std::endl;
+					exit(EXIT_FAILURE);
+				}
+			}
+		}
+		if (get_cgi_php(_nb_conf_serv - 1).empty()) {
+			std::cout << "cgi php empty" << std::endl;
+			_cgi_php.push_back(std::pair<int, std::string>(_nb_conf_serv, "./cgi_bin/php-cgi"));
+			std::cout << get_cgi_php(_nb_conf_serv - 1) << std::endl;
+		}
 	}
 
 };
