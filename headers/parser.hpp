@@ -108,14 +108,12 @@ private:
 		if (!_nb_conf_serv++)
 			parse_methode_server();
 		parse_config_methode();
-		if (parse_methode_server())
-		{
+		if (parse_methode_server()) {
 			parse_all_parameters();
 			parse_all_file();
 		}
 		else
 			parse_all_parameters();
-		
 		return ;
 	}
 
@@ -480,13 +478,26 @@ public:
 		return (_cgi_php.empty() ? std::string() : num_conf < _cgi_php.back().first ? _cgi_php[num_conf].second : std::string());
 	}
 
-void parse_all_parameters(void)
-{
-	if (get_root().empty())
-	{
-		return;
+	// std::vector<std::pair<int, std::list<int> > >			_port;
+	// std::vector<std::pair<int, std::string> >				_server_name;
+	// std::vector<std::pair<int, std::string> >				_root;
+	// std::vector<std::pair<int, std::list<std::string> > >	_index;
+	// std::vector<std::pair<int, std::string> >				_error_log;
+	// std::vector<std::pair<int, std::string> >				_access_log;
+	// std::vector<std::pair<int, std::string> >				_error_page;
+	// std::vector<std::pair<int, int> >						_limit_request;
+	// std::vector<std::pair<int, std::list<std::string> > >	_method_lists;
+	// std::vector<std::pair<int, std::string> >				_cgi_php;
+
+	void	parse_all_parameters( void ) {
+		if (get_root(_nb_conf_serv - 1).empty()) {
+			std::cout << "root empty" << std::endl;
+			_root.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www"));
+			std::cout << get_root(_nb_conf_serv - 1) << std::endl;
+		}
+		return ;
 	}
-}
+
 };
 
 
