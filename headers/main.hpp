@@ -25,10 +25,20 @@
 # include <fcntl.h>
 # include <sys/event.h>
 # include <sys/time.h>
+# include <string>
 
 class Parser;
 class Server;
 class Client;
+
+class error_exception {
+private:
+	std::string _msg_err;
+public:
+	error_exception( const std::string &msg_err ) : _msg_err(msg_err) {}
+	static void bad_send( void ) { throw error_exception("Bad send"); }
+	const char	*what( void ) const { return (_msg_err.c_str()); }
+};
 
 
 const std::string	g_month[] = {	"Jan", "Feb", "Mar", "Apr", \
@@ -37,7 +47,7 @@ const std::string	g_month[] = {	"Jan", "Feb", "Mar", "Apr", \
 
 const std::string	g_array_method[] = {"GET", "HEAD", "POST", \
 										"OPTIONS", "CONNECT", "TRACE", \
-										"PUT", "PATCH", "DELETE" };
+										"PUT", "PATCH", "DELETE", "" };
 
 const std::string	g_config_methode[] = {	"listen", "server_name", "root", \
 											"index", "error_log", "access_log", \

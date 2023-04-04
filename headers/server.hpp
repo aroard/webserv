@@ -41,8 +41,9 @@ public:
 			}
 			_socketServer.push_back(socketServer);
 		}
-		std::cout << "Constructor Server called" << std::endl;
+		// std::cout << "Constructor Server called" << std::endl;
 	}
+
 
 	~Server() {
 		
@@ -50,8 +51,9 @@ public:
 			it != _socketServer.end(); ++it)
 			close(*it);
 
-		std::cout << "Destructor Server called" << std::endl;
+		// std::cout << "Destructor Server called" << std::endl;
 	}
+
 
 	void	start( void ) {
 		routine_server();
@@ -76,28 +78,24 @@ private:
 			perror("ERROR kevent set"); exit(EXIT_FAILURE);
 		}
 
+		struct kevent	*ev_get = new struct kevent[_socketServer.size()];
 		int				nfds;
 
 		while (true) {
-
-			struct kevent	*ev_get = new struct kevent[_socketServer.size()];
 
 			if ((nfds = kevent(kq, NULL, 0, ev_get, _socketServer.size(), \
 				NULL)) < 0) {
 				perror("ERROR kevent get"); exit(EXIT_FAILURE);
 			}
-			std::cout << nfds << std::endl;
-			for (int i = 0; i < nfds; ++i) {
+			for (i = 0; i < nfds; ++i) {
 				if (ev_get[i].filter == EVFILT_READ) {
 					Client	cl(ev_get[i].ident, _parser);
 					cl.run();
 				}
 			}
-			delete[] ev_get;
-			ev_get = NULL;
-
 		}
-		return ;
+		std::cout << "finish" << std::endl;
+		delete[] ev_get;
 	}
 
 };

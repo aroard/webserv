@@ -39,4 +39,17 @@ r : all
 	./$(NAME)
 
 install:
-	apt-get install -y libkqueue-dev
+	apt-get update
+	apt-get install -y build-essential autoconf \
+		automake libtoo libkqueue-dev cmake &> /dev/null
+	git clone https://github.com/mheily/libkqueue.git /libkqueue
+	cd /libkqueue
+	cmake3 -G "Unix Makefiles" -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_INSTALL_LIBDIR=lib <path to source>
+	make
+	cpack3 -G RPM
+	mkdir -p /usr/include/kqueue/sys/
+	cp -f /libkqueue/include/sys/event.h /usr/include/kqueue/sys/event.h
+	rm -rf /libkqueue
+
+
+

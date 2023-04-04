@@ -15,12 +15,12 @@ public:
 		if ((_socketClient = accept(socketServer, NULL, NULL)) < 0) {
 			perror("ERRPR accept"); exit(EXIT_FAILURE);
 		}
-		std::cout << "Constructor Client called" << std::endl;
+		// std::cout << "Constructor Client called" << std::endl;
 	}
 
 	~Client() {
 		close (_socketClient);
-		std::cout << "Destructor Client called" << std::endl;
+		// std::cout << "Destructor Client called" << std::endl;
 	}
 
 	void	run( void ) {
@@ -30,17 +30,13 @@ public:
 private:
 
 	void	routine( void ) {
-		std::cout << __LINE__ << std::endl;
 		char	*msg = new char[_parser.get_limit_request(0) + 1];
 
 		std::memset(msg, 0, _parser.get_limit_request(0));
-		std::cout << __LINE__ << std::endl;
 		if (recv(_socketClient, msg, _parser.get_limit_request(0), 0) < 0) {
 			perror("ERROR recv"); exit(EXIT_FAILURE);
 		}
-		std::cout << __LINE__ << std::endl;
 		parse_request_http(msg);
-		std::cout << __LINE__ << std::endl;
 		return ;
 	}
 
@@ -50,8 +46,6 @@ private:
 		std::stringstream	ss(msg);
 		std::string			line;
 		size_t				pos;
-
-		std::cout << "[" << msg << "]" << std::endl;
 
 		if (std::getline(ss, line)) {
 			pos = line.find(' ');
@@ -70,24 +64,20 @@ private:
 		// 	std::cout << "Key [" << it->first << "] Value [" << it->second << "]" << std::endl;
 		// }
 
-		int a = 0;
-		do {
-			if (request.count(g_array_method[a]))
-				break;
-		} while (++a < 9);
-
-		switch (a) {
-			case 0: get_request_http(request); break ;
-			case 1: std::cout << "HEAD" << std::endl; break ;
-			case 2: std::cout << "POST" << std::endl; break ;
-			case 3: std::cout << "OPTIONS" << std::endl; break ;
-			case 4: std::cout << "CONNECT" << std::endl; break ;
-			case 5: std::cout << "TRACE" << std::endl; break ;
-			case 6: std::cout << "PUT" << std::endl; break ;
-			case 7: std::cout << "PATCH" << std::endl; break ;
-			case 8: std::cout << "DELETE" << std::endl; break ;
-			default: std::cout << "Missing path" << std::endl; break ;
-		}
+		for (int i = 0; g_array_method[i].empty() == false; ++i)
+			if (request.count(g_array_method[i]))
+				switch (i) {
+					case 0: get_request_http(request); return ;
+					case 1: std::cout << "HEAD" << std::endl; return ;
+					case 2: std::cout << "POST" << std::endl; return ;
+					case 3: std::cout << "OPTIONS" << std::endl; return ;
+					case 4: std::cout << "CONNECT" << std::endl; return ;
+					case 5: std::cout << "TRACE" << std::endl; return ;
+					case 6: std::cout << "PUT" << std::endl; return ;
+					case 7: std::cout << "PATCH" << std::endl; return ;
+					case 8: std::cout << "DELETE" << std::endl; return ;
+					default: std::cout << "Missing path" << std::endl; return ;
+				}
 		return;
 	}
 
@@ -95,10 +85,12 @@ private:
 	int open_files( std::ifstream &open, std::string &path, std::string &msg )
 	{
 		std::ifstream		file_tmp;
-		std::string			array_index[] = {"index.html", "index.htm", "test.html", "index.php", "test/index.html"};
 		int					i = 0;
+
+		if (open.is_open())
+			open.close();
 		open.open(path.c_str());
-		if (open) {
+		if (open.is_open()) {
 			if (path.at(path.size() - 1) != '/') {
 				file_tmp.open((path + '/').c_str());
 				if (file_tmp.is_open()) {
@@ -107,16 +99,24 @@ private:
 				}
 			}
 			if (path.at(path.size() - 1) == '/') {
-				do {
+				std::list<std::string>	ls = _parser.get_index(0);
+				for (std::list<std::string>::iterator it = ls.begin(); \
+					it != ls.end(); ++it) {
 					open.close();
-					open.open((path + array_index[i++]).c_str());
-				} while (i != 5 && !open.is_open());
+					open.open((path + *it).c_str());
+					if (open.is_open()) {
+						path += *it;
+						if (path.at(path.size() - 1) == '/')
+							return (open_files(open, path, msg));
+						return (200);
+					}
+				}
 			}
 		}
-		if (open.is_open())
+		if (open.is_open() && path.at(path.size() - 1) != '/')
 			return (200);
 		msg = "HTTP/1.1 404 Not Found\nContent-type: text/html; charset=UTF-8\nServer:" \
-				+ _parser.get_server_name(0) + "\nConnection: close\n\n";
+				+ _parser.get_server_name(0) + "\n\n";
 		open.open(_parser.get_error_page(0).c_str());
 		return (404);
 	}
@@ -160,14 +160,16 @@ private:
 		std::memset(tmp, 0, 31);
 		msg = "HTTP/1.1 200 OK\nServer:" + _parser.get_server_name(0) + \
 				"\nConnection: close\n";
-		if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0) {
-			perror("ERROR send");
-		}
-		while (read(fd_pipe[0], tmp, 31) > 0) { 
-			if (send(_socketClient, tmp, strlen(tmp), 0) < 0) {
-				perror("ERROR send");
-			} 
-			std::memset(tmp, 0, 31); 
+		try {
+			if (send(_socketClient, msg.c_str(), msg.size(), MSG_NOSIGNAL) < 0)
+				throw error_exception::bad_send;
+			while (read(fd_pipe[0], tmp, 31) > 0) { 
+				if (send(_socketClient, tmp, strlen(tmp), MSG_NOSIGNAL) < 0)
+					throw error_exception::bad_send;
+				std::memset(tmp, 0, 31); 
+			}
+		} catch (const error_exception &msg_err) {
+			std::cout << "error_exception: " << msg_err.what() << std::endl;
 		}
 		close(fd_pipe[0]);
 		waitpid(pid, 0, 0);
@@ -176,44 +178,60 @@ private:
 
 
 	void	get_request_http( std::map<std::string, std::string> &request) {
-
 		std::ifstream	web_page;
 		std::string		path;
 		std::string		msg;
 		int				error_code;
 
-		path = request["GET"];
-		path = '.' + path.substr(0, path.find(" "));
+		path = _parser.get_root(0);
+		if (path[path.size() - 1] == '/')
+			path.erase(path.size() - 1);
+		path += request["GET"].substr(0, request["GET"].find(" "));
 
 		error_code = open_files(web_page, path, msg);
-
 		if (error_code != 404 && path.size() > 4 \
 			&& !path.compare(path.size() - 4, path.size(), ".php")) {
 			execute_cgi_php(path, msg);
 		}
 		else {
 			if (error_code != 404)
-				msg = "HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\nConnection: close\n\n";
-				std::cout << msg << std::endl;
-			if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0) {
-					perror("ERROR send1");
-			}
-			for (std::string line; std::getline(web_page, line);) { 
-				line += '\n';
-				if (send(_socketClient, line.c_str(), line.size(), 0) < 0) {
-					perror("ERROR send2");
+				msg = "HTTP/1.1 200 OK\nContent-Type: text/html; charset=UTF-8\n\n";
+			try {
+				if (send(_socketClient, msg.c_str(), msg.size(), MSG_NOSIGNAL) < 0)
+					error_exception::bad_send;
+				for (std::string line; std::getline(web_page, line);) { 
+					line += '\n';
+					if (send(_socketClient, line.c_str(), line.size(), MSG_NOSIGNAL) < 0)
+						error_exception::bad_send;
 				}
+			} catch (const error_exception &msg_err) {
+				std::cout << "error_exception: " << msg_err.what() << std::endl;
 			}
 		}
 		web_page.close();
 
-		std::cout << request["Host"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
-			 << error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent"] + "\"" << std::endl;
-		
+		std::ofstream access_log(_parser.get_access_log(0).c_str(), \
+			std::ofstream::out | std::ofstream::app);
+		std::ofstream error_log(_parser.get_error_log(0).c_str(), \
+			std::ofstream::out | std::ofstream::app);
+
+		if (error_code == 200) {
+			std::ofstream access_log(_parser.get_access_log(0).c_str(), \
+				std::ofstream::out | std::ofstream::app);
+			access_log << request["Host"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
+				<< error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent"] + "\"" << std::endl;
+			access_log.close();
+		}
+		else {
+			std::ofstream error_log(_parser.get_error_log(0).c_str(), \
+				std::ofstream::out | std::ofstream::app);
+			error_log << request["Host"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
+				<< error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent"] + "\"" << std::endl;
+			error_log.close();
+		}
 		return ;
 	}
 
 };
-
 
 #endif
