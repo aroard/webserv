@@ -490,35 +490,46 @@ public:
 	// std::vector<std::pair<int, std::string> >				_cgi_php;
 
 	void	parse_all_parameters( void ) {
-		// port
-		if (get_server_name(_nb_conf_serv - 1).empty()) {
-			std::cout << "server name empty" << std::endl;
+		if (get_port(_nb_conf_serv - 1).empty()) {
+			std::list<int> empty_list(1, 8080);
+			std::pair<int, std::list<int> > new_pair = std::make_pair(_nb_conf_serv, empty_list);
+			_port.push_back(new_pair);
+		}
+		else{
+			std::list<int> ls = get_port(_nb_conf_serv - 1);
+			for (std::list<int>::iterator it = ls.begin(); it != ls.end(); ++it)
+				if(*it < 0 || *it == 80 || *it > 6536){
+					std::cerr << "Error: Invalid port: " << *it << std::endl;
+					exit(1);
+				}
+			}
+		if (get_server_name(_nb_conf_serv - 1).empty()) 
 			_server_name.push_back(std::pair<int, std::string>(_nb_conf_serv, "dinopoulet.42.fr"));
-			std::cout << get_server_name(_nb_conf_serv - 1) << std::endl;
-		}
-		if (get_root(_nb_conf_serv - 1).empty()) {
-			std::cout << "root empty" << std::endl;
-			_root.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www"));
-			std::cout << get_root(_nb_conf_serv - 1) << std::endl;
-		}
-		if (get_error_log(_nb_conf_serv - 1).empty()) {
-			std::cout << "error log empty" << std::endl;
+		if (get_root(_nb_conf_serv - 1).empty())
+			_root.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/"));
+		if (get_error_log(_nb_conf_serv - 1).empty())
 			_error_log.push_back(std::pair<int, std::string>(_nb_conf_serv, "./logs/error.log"));
-			std::cout << get_error_log(_nb_conf_serv - 1) << std::endl;
-		}
-		if (get_access_log(_nb_conf_serv - 1).empty()) {
-			std::cout << "access log empty" << std::endl;
+		if (get_access_log(_nb_conf_serv - 1).empty())
 			_access_log.push_back(std::pair<int, std::string>(_nb_conf_serv, "./logs/access.log"));
-			std::cout << get_access_log(_nb_conf_serv - 1) << std::endl;
-		}
-		if (_limit_request.empty())
-			std::cout << " salut01" << std::endl;
-		if (!get_limit_request(_nb_conf_serv - 1)) {
-			std::cout << "limit request empty" << std::endl;
+		if (get_error_page(_nb_conf_serv - 1).empty())
+			_error_page.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/error_pages/NotFound.html"));
+		if (_limit_request.empty())	
 			_limit_request.push_back(std::pair<int, int>(_nb_conf_serv, 4096));
-			std::cout << get_limit_request(_nb_conf_serv - 1) << std::endl;
+		else{			
+			if (get_limit_request(_nb_conf_serv - 1) < 1024 || get_limit_request(_nb_conf_serv - 1) > 4096){
+				std::cerr << "Error: Limit request must be between 1024-4096" << std::endl;
+				exit(1);
+				} 
 		}
-		// method list
+		if (get_method_lists(_nb_conf_serv - 1).empty()) {
+			std::list<std::string> empty_list;
+			empty_list.push_back("GET");
+			empty_list.push_back("POST");
+			empty_list.push_back("DELETE");
+			std::pair<int, std::list<std::string> > new_pair = std::make_pair(_nb_conf_serv, empty_list);
+			_method_lists.push_back(new_pair);
+
+		}
 		{
 			std::list<std::string> ls = get_method_lists(_nb_conf_serv - 1);
 			for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it){
@@ -533,11 +544,8 @@ public:
 				}
 			}
 		}
-		if (get_cgi_php(_nb_conf_serv - 1).empty()) {
-			std::cout << "cgi php empty" << std::endl;
+		if (get_cgi_php(_nb_conf_serv - 1).empty())
 			_cgi_php.push_back(std::pair<int, std::string>(_nb_conf_serv, "./cgi_bin/php-cgi"));
-			std::cout << get_cgi_php(_nb_conf_serv - 1) << std::endl;
-		}
 	}
 
 };
