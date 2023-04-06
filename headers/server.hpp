@@ -36,7 +36,7 @@ public:
 				perror("ERROR bind"); exit (EXIT_FAILURE);
 			}
 
-			if (listen(socketServer, 10) < 0) {
+			if (listen(socketServer, MAX_LISTEN) < 0) {
 				perror("ERROR listen"); exit (EXIT_FAILURE);
 			}
 			_socketServer.push_back(socketServer);
@@ -78,23 +78,29 @@ private:
 			perror("ERROR kevent set"); exit(EXIT_FAILURE);
 		}
 
+		delete[] ev_set;
+
 		struct kevent	*ev_get = new struct kevent[_socketServer.size()];
 		int				nfds;
 
-		while (true) {
-
-			if ((nfds = kevent(kq, NULL, 0, ev_get, _socketServer.size(), \
-				NULL)) < 0) {
-				perror("ERROR kevent get"); exit(EXIT_FAILURE);
-			}
-			for (i = 0; i < nfds; ++i) {
-				if (ev_get[i].filter == EVFILT_READ) {
-					Client	cl(ev_get[i].ident, _parser);
-					cl.run();
+		signal(SIGINT, Error_exception::interruption_server);
+		try {
+			while (true) {
+				if ((nfds = kevent(kq, NULL, 0, ev_get, _socketServer.size(), \
+					NULL)) < 0) {
+					perror("ERROR kevent get"); exit(EXIT_FAILURE);
+				}
+				for (i = 0; i < nfds; ++i) {
+					if (ev_get[i].filter == EVFILT_READ) {
+						Client	cl(ev_get[i].ident, _parser);
+						cl.run();
+					}
 				}
 			}
+		} catch (const Error_exception &e) {
+			std::cout << e.what() << std::endl;
 		}
-		std::cout << "finish" << std::endl;
+		signal(SIGINT, SIG_DFL);
 		delete[] ev_get;
 	}
 

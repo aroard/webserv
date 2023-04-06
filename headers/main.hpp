@@ -27,16 +27,26 @@
 # include <sys/time.h>
 # include <string>
 
+# ifndef MAX_LISTEN
+#  define MAX_LISTEN 128
+# endif
+
 class Parser;
 class Server;
 class Client;
 
-class error_exception {
+class Error_exception {
 private:
 	std::string _msg_err;
 public:
-	error_exception( const std::string &msg_err ) : _msg_err(msg_err) {}
-	static void bad_send( void ) { throw error_exception("Bad send"); }
+	Error_exception( const std::string &msg_err ) : _msg_err(msg_err) {}
+	static void bad_send( void ) { throw Error_exception("Bad send"); }
+	static void socket_close( int signum ) { 
+		throw Error_exception("Socket is closing");
+	}
+	static void interruption_server( int signum ) { 
+		throw Error_exception("\rServer is down");
+	}
 	const char	*what( void ) const { return (_msg_err.c_str()); }
 };
 
