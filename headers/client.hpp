@@ -47,8 +47,7 @@ private:
 	}
 
 
-	void	put_line(std::string &line) {
-		std::cout << "--------------------------" << std::endl;
+	void	put_line(std::string line) {
 		for (std::string::iterator it = line.begin();
 			it != line.end(); ++it) {
 			if (*it==13)
@@ -60,7 +59,6 @@ private:
 			else
 				std::cout << (int)*it << std::flush;
 		}
-		std::cout << "--------------------------" << std::endl;
 		return ;
 	}
 
@@ -78,11 +76,15 @@ private:
 		}
 		while (std::getline(ss, line)) {
 			line += '\n';
+			// put_line(line);
 			if (line.size() == 2 && line.find("\r\n") == 0) {
 				std::string	tmp;
 				while (std::getline(ss, line))
 					tmp += line + '\n';
 				request["Request_content"] = tmp;
+				// std::cout << "//////////// TMP //////////" << std::endl;
+				// put_line(tmp);
+				// std::cout << "//////////// TMP //////////" << std::endl;
 			}
 			else if (line.size() > 0) {
 				pos = line.find(":");
@@ -113,7 +115,45 @@ private:
 		return ;
 	}
 
+
 	# include "./request_http/request_get.hpp"
+
+
+	std::string	get_request_post_boudary(std::string &content_type) {
+		int			pos = content_type.find("boundary=");
+		if (pos == -1)
+			Error_exception::bad_post("No boundary in Content-Type");
+		pos += strlen("boundary=");
+		std::string	boundary = "--" + content_type.substr(pos, \
+			content_type.find_first_of("\r\n") - pos);
+		return (boundary);
+	}
+
+
+	void	set_request_post_data(std::string &tmp, const std::string &boundary) {
+		tmp = tmp.substr(tmp.find(boundary) + boundary.size());
+		if (tmp == "--\r\n")
+			return ;
+		int pos = tmp.find("filename=\"");
+		if (pos == -1)
+			Error_exception::bad_post("bad filename");
+		pos += strlen("filename=\"");
+		std::string 	filename = tmp.substr(pos, tmp.find_first_of("\"\r\n", pos) - pos);
+		std::ofstream	img(("test_" + filename).c_str(), std::ofstream::binary);
+		if (img.is_open() == false)
+			Error_exception::bad_post("File is not open Phap");
+		pos = tmp.find("\r\n\r\n") + 4;
+		std::string		data = tmp.substr(pos, tmp.find(boundary) - pos - 2);
+		std::cout << "//////////// " << filename << " //////////" << std::endl;
+		put_line(data);
+		std::cout << "//////////// " << filename << " //////////" << std::endl;
+		std::cout << "size: " << data.size() << std::endl;
+		img.write(tmp.c_str(), tmp.size());
+		img.close();
+
+		set_request_post_data(tmp, boundary);
+	}
+
 
 	void	get_request_post( std::map<std::string, std::string> &request ) {
 		std::cout << std::endl;
@@ -123,54 +163,44 @@ private:
 		try {
 			if (!request.count("Content-Type"))
 				Error_exception::bad_post("No Content-Type");
-			std::string	tmp = request["Content-Type"] + '\n';
-			int	pos = tmp.find("boundary=");
-			if (tmp.find("multipart/form-data") == -1
-				|| pos == -1)
-				Error_exception::bad_post("No multipart/form-data");
-			std::string	boundary = tmp.substr(pos + strlen("boundary="));
-			if (!request.count("Request_content"))
-				Error_exception::bad_post("No Request_content");
+			std::string	boundary = get_request_post_boudary(request["Content-Type"]);
+			
+			// std::cout << "//////////// BOUNDARY //////////" << std::endl;
+			// put_line(boundary);
+			// std::cout << "//////////// BOUNDARY //////////" << std::endl;
 
-			tmp = request["Request_content"];
-			if ((pos = tmp.find(boundary)) == -1)
-				Error_exception::bad_post("No boundary in Request_content");
-			tmp = tmp.substr(pos + boundary.size());
-			tmp = tmp.substr(0, tmp.size() - boundary.size());
-			if ((pos = tmp.find("filename=\"")) == -1)
-				Error_exception::bad_post("No filename");
-
-			std::string	filename = tmp.substr(pos + strlen("filename=\""));
-			filename = filename.substr(0, filename.find_first_of('"'));
-			std::ofstream	img(("test_" + filename).c_str(), std::ofstream::binary);
+			set_request_post_data(request["Request_content"], boundary);
+			std::cout << "\r\n$$$$$$$$$$$$$$$$ IMG1 $$$$$$$$$$$$$$$$$" << std::endl;
+		{
+			std::ifstream	is("template.png", std::ofstream::binary);
 		
-			tmp = tmp.substr(tmp.find("\r\n\r\n") + strlen("\r\n\r\n"));
-			
-			// put_line(tmp); std::cout << tmp.size() << std::endl;
-			img.write(tmp.c_str(), tmp.size());
-			
-			img.close();
-
-			std::ifstream	is(filename.c_str(), std::ofstream::binary);
-
-			is.seekg (0, is.end);
-			int length = is.tellg();
-			is.seekg (0, is.beg);
-
-			char * buffer = new char [length];
-
-			std::cout << "Reading " << length << " characters... ";
-			is.read (buffer,length);
-
-			// put_line(buffer);
-
-			if (is)
-			std::cout << "all characters read successfully.";
-			else
-			std::cout << "error: only " << is.gcount() << " could be read";
+			char * buffer = new char [2];
+			std::string	buff;
+		
+			while (is.read (buffer, 1))
+				buff += buffer[0];
+			put_line(buff); std::cout << "\nsize:" << buff.size() << std::endl;
+		
 			is.close();
-
+		
 			delete[] buffer;
+		}
+		std::cout << "\r\n$$$$$$$$$$$$$$$ IMG1.1 $$$$$$$$$$$$$$$$$$" << std::endl;
+		{
+			std::ifstream	is("template1.1.png", std::ofstream::binary);
+		
+			char * buffer = new char [2];
+			std::string	buff;
+		
+			while (is.read (buffer, 1))
+				buff += buffer[0];
+			put_line(buff); std::cout << "\nsize:" << buff.size() << std::endl;
+		
+			is.close();
+		
+			delete[] buffer;
+		}
+		std::cout << "\r\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
 
 		} catch (const Error_exception &e) {
 			std::cout << e.what() << std::endl;
