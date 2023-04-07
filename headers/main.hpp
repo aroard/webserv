@@ -47,6 +47,9 @@ public:
 	static void interruption_server( int signum ) { 
 		throw Error_exception("\rServer is down");
 	}
+	static void bad_post( const std::string &msg_err ) { 
+		throw Error_exception(msg_err);
+	}
 	const char	*what( void ) const { return (_msg_err.c_str()); }
 };
 
