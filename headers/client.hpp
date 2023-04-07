@@ -136,22 +136,27 @@ private:
 			return ;
 		int pos = tmp.find("filename=\"");
 		if (pos == -1)
-			Error_exception::bad_post("bad filename");
+			Error_exception::bad_post("can't find filename");
 		pos += strlen("filename=\"");
 		std::string 	filename = tmp.substr(pos, tmp.find_first_of("\"\r\n", pos) - pos);
-		std::ofstream	img(("test_" + filename).c_str(), std::ofstream::binary);
+		std::ofstream	img(("test_" + filename).c_str(), std::ios::out | std::ofstream::binary);
 		if (img.is_open() == false)
 			Error_exception::bad_post("File is not open Phap");
 		pos = tmp.find("\r\n\r\n") + 4;
 		std::string		data = tmp.substr(pos, tmp.find(boundary) - pos - 2);
-		std::cout << "//////////// " << filename << " //////////" << std::endl;
-		put_line(data);
-		std::cout << "//////////// " << filename << " //////////" << std::endl;
-		std::cout << "size: " << data.size() << std::endl;
-		img.write(tmp.c_str(), tmp.size());
+		//std::cout << "//////////// " << filename << " //////////" << std::endl;
+		//put_line(data);
+		//std::cout << "\n//////////// " << filename << " //////////" << std::endl;
+		//std::cout << "size: " << data.size() << std::endl;
+		img.write(data.c_str(), data.size());
+		if (img.good()) 
+    		std::cout << "File written successfully\n";
+  		else 
+    		std::cerr << "Error writing file\n";
+  
 		img.close();
 
-		set_request_post_data(tmp, boundary);
+		//set_request_post_data(tmp, boundary);
 	}
 
 
@@ -170,24 +175,9 @@ private:
 			// std::cout << "//////////// BOUNDARY //////////" << std::endl;
 
 			set_request_post_data(request["Request_content"], boundary);
-			std::cout << "\r\n$$$$$$$$$$$$$$$$ IMG1 $$$$$$$$$$$$$$$$$" << std::endl;
+			std::cout << "\r\n$$$$$$$$$$$$$$$$ template.png $$$$$$$$$$$$$$$$$" << std::endl;
 		{
 			std::ifstream	is("template.png", std::ofstream::binary);
-		
-			char * buffer = new char [2];
-			std::string	buff;
-		
-			while (is.read (buffer, 1))
-				buff += buffer[0];
-			put_line(buff); std::cout << "\nsize:" << buff.size() << std::endl;
-		
-			is.close();
-		
-			delete[] buffer;
-		}
-		std::cout << "\r\n$$$$$$$$$$$$$$$ IMG1.1 $$$$$$$$$$$$$$$$$$" << std::endl;
-		{
-			std::ifstream	is("template1.1.png", std::ofstream::binary);
 		
 			char * buffer = new char [2];
 			std::string	buff;
