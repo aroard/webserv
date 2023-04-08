@@ -35,3 +35,4 @@ localhost:8001 - - [7/Apr/2023:18:24:32 +0000] "GET /favicon.ico HTTP/1.1" 404 
 localhost:8001 - - [7/Apr/2023:22:45:06 +0000] "GET /favicon.ico HTTP/1.1" 404 87 "-" "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/111.0.0.0 Safari/537.36"
 localhost:8001 - - [7/Apr/2023:22:51:06 +0000] "GET /favicon.ico HTTP/1.1" 404 87 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0"
 localhost:8000 - - [7/Apr/2023:23:33:34 +0000] "GET /favicon.ico HTTP/1.1" 404 87 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0"
+localhost:8001 - - [8/Apr/2023:02:34:02 +0000] "GET /uplad.html HTTP/1.1" 404 87 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0"

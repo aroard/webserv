@@ -95,6 +95,64 @@ void	execute_cgi_php( std::string &path_php, std::string &msg ) {
 	return ;
 }
 
+void	error_and_access_log(int error_code, std::string &msg, std::map<std::string, std::string> &request)
+{
+	int				nb_lines = 0;
+	std::ifstream	check_200;
+	std::ofstream 	outfile;
+	std::string		str;
+	std::string		file;
+
+	if (error_code == 200)
+		file = _parser.get_access_log(0);
+	else
+		file = _parser.get_error_log(0);
+		
+	check_200.open(file.c_str());
+	if(!check_200){
+		std::cerr << "Can't open the logs files" << std::endl;
+		exit(1);
+	}
+	while(getline(check_200, str))
+		nb_lines++;
+	check_200.close();
+	if (nb_lines >= 200){
+		std::string file2 = file + ".replace";
+		if (error_code == 200){
+			outfile.open((file2).c_str(), \
+			std::ofstream::out | std::ofstream::app);			
+			check_200.open(file.c_str());
+		}
+		else{
+			outfile.open((file2).c_str(), \
+			std::ofstream::out | std::ofstream::app);
+			check_200.open(file.c_str());
+		}
+		if( !outfile || !check_200 ){
+			std::cerr << "Can't open the logs files" << std::endl;
+			exit(1);
+		}
+		for(int only_ten(0); only_ten < nb_lines; only_ten++){
+			getline(check_200, str);
+			if(only_ten >= nb_lines - 10)
+				outfile << str;
+		}
+		outfile.close();
+		check_200.close();
+		if (std::remove(file.c_str()) != 0) {
+			std::cout << "could not remove the folder :" + file << std::endl;
+			exit (1);
+		}
+		if (std::rename(file2.c_str(), file.c_str()) != 0) {
+			std::cout << "could not rename the folder :" + file2 << std::endl;
+			exit (1);
+		}
+	}
+	outfile.open(file.c_str(), std::ofstream::out | std::ofstream::app);
+	outfile << request["Host"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
+			<< error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent"] + "\"" << std::endl;
+	outfile.close();
+}
 
 void	get_request_get( std::map<std::string, std::string> &request) {
 	std::ifstream	web_page;
@@ -128,22 +186,7 @@ void	get_request_get( std::map<std::string, std::string> &request) {
 		} catch (const Error_exception &e) { /*std::cerr << "Error_exception: " << e.what() << std::endl;*/ }
 	}
 	web_page.close();
-
-	if (error_code == 200) {
-		std::ofstream access_log(_parser.get_access_log(0).c_str(), \
-			std::ofstream::out | std::ofstream::app);
-		access_log << request["Host"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
-			<< error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent"] + "\"" << std::endl;
-		access_log.close();
-	}
-	else {
-		std::ofstream error_log(_parser.get_error_log(0).c_str(), \
-		std::ofstream::out | std::ofstream::app);
-		error_log << request["Host"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
-			<< error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent"] + "\"" << std::endl;
-		error_log.close();
-	}
-	return ;
+	error_and_access_log(error_code, msg, request);
 }
 
 #endif
