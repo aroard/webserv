@@ -211,4 +211,50 @@ void	set_comment_line( std::string &tmp ) {
 	return ;
 }
 
+std::string	_file_created; // 201
+std::string	_file_bad_request; // 400
+std::string	_file_unauthorized; // 401
+std::string	_file_forbidden; // 403
+std::string	_file_not_found; // 404
+std::string	_file_methode_not_allowed; // 405
+std::string	_file_internal_server_error; // 500
+
+void	set_file_http( void ) {
+	const char	*path_file[] = { "./tools/created.html", "./tools/bad_request.html", \
+								 "./tools/unauthorized.html", "./tools/forbiden.html", \
+								 "./tools/not_found.html", "./tools/method_not_allowed.html", \
+								 "./tools/internal_server_error.html", "" };
+	char		buffer[256];
+	std::string	data_file;
+	for (int i = 0; strlen(path_file[i]); ++i) {
+		std::ifstream	file(path_file[i]);
+		data_file.clear();
+		if (file.is_open() != false) {
+			std::memset(buffer, 0, 255);
+			while (file.getline(buffer, 255)) {
+				data_file += buffer;
+				data_file += "\r\n";
+				std::memset(buffer, 0, 255);
+			}
+			std::sprintf(buffer, "%d", data_file.size());
+			data_file = std::string("Content-Type: text/html\r\nContent-Length: ") \
+			+ buffer + "\r\n\r\n" + data_file;
+		}
+		else
+			data_file += "Content-Type: text/html\r\nContent-Length: 57\r\n\r\n\
+<html><body>Internal file loading error</body></html>\r\n";
+		switch (i) {
+			case 0: _file_created = "HTTP/1.1 201 Created\r\n" + data_file; break;
+			case 1: _file_bad_request = "HTTP/1.1 400 Bad Request\r\n" + data_file; break;
+			case 2: _file_unauthorized = "HTTP/1.1 401 Unauthorized\r\n" + data_file; break;
+			case 3: _file_forbidden = "HTTP/1.1 403 Forbidden\r\n" + data_file; break;
+			case 4: _file_not_found = "HTTP/1.1 404 Not Found\r\n" + data_file; break;
+			case 5: _file_methode_not_allowed = "HTTP/1.1 405 Method Not Allowed\r\n" + data_file; break;
+			case 6: _file_internal_server_error = "HTTP/1.1 500 Internal Server Error\r\n" + data_file; break;
+			default: break ;
+		};
+	}
+	return ;
+}
+
 #endif

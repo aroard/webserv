@@ -98,7 +98,7 @@ private:
 				}
 			}
 		} catch (const Error_exception &e) {
-			std::cout << e.what() << std::endl;
+			// std::cout << e.what() << std::endl;
 		}
 		signal(SIGINT, SIG_DFL);
 		delete[] ev_get;

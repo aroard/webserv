@@ -15,12 +15,10 @@ public:
 		if ((_socketClient = accept(socketServer, NULL, NULL)) < 0) {
 			perror("ERRPR accept"); exit(EXIT_FAILURE);
 		}
-		// std::cout << "Constructor Client called" << std::endl;
 	}
 
 	~Client() {
 		close (_socketClient);
-		// std::cout << "Destructor Client called" << std::endl;
 	}
 
 	void	run( void ) {
@@ -30,76 +28,89 @@ public:
 private:
 
 	void	routine( void ) {
-		std::string		msg;
-		char			*tmp = new char[_parser.get_limit_request(0) + 1];
-		int 			nb_octets;
+		std::map<std::string, std::string> request;
+		std::string							msg;
+		char								*tmp = \
+				new char[_parser.get_limit_request(0) + 1];
+		int 								nb_octets;
+		int									pos = -1;
 
-		do {
-			std::memset(tmp, 0, _parser.get_limit_request(0));
-			if ((nb_octets = recv(_socketClient, tmp, _parser.get_limit_request(0), 0)) < 0) {
-				perror("ERROR recv"); delete[] tmp; return ;
+		std::memset(tmp, 0, _parser.get_limit_request(0));
+		while ((nb_octets = recv(_socketClient, tmp, _parser.get_limit_request(0), MSG_DONTWAIT)) != 0) {
+			if (nb_octets != -1) {
+				msg.insert(msg.size(), tmp, nb_octets);
+				pos = msg.find("Content-Length: ");
+				if (pos != -1) {
+					pos += 16;
+					pos = atoi(msg.substr(pos, (msg.substr(pos)).find_first_of("\r\n")).c_str());
+					nb_octets = msg.find("\r\n\r\n");
+					if (nb_octets != -1) pos += nb_octets + 4;
+					else pos = 1 << 30;
+				}
+				else if (msg.find("\r\n\r\n") != -1)
+					break ;
+				std::memset(tmp, 0, _parser.get_limit_request(0));
 			}
-			msg.insert(msg.size(), tmp, nb_octets);
-			std::cout << "x:" << nb_octets << std::endl;
-		} while (nb_octets == _parser.get_limit_request(0));
-		parse_request_http(msg);
+			if (pos != -1 && msg.size() >= pos)
+				break ;
+		}
+		get_request_http(request, msg);
+		// std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
+		// for (std::map<std::string, std::string>::iterator it = request.begin();
+		// 	it != request.end(); ++it) {
+		// 	std::cout << "["; put_line(it->first); std::cout << "]";
+		// 	std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
+		// }
+		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		// std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
+		// put_line(msg);
+		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		// std::cout << "msg:" << msg.size() << std::endl;
+		choose_methode_http(request);
 		delete[] tmp;
 	}
 
+// std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
+// for (std::map<std::string, std::string>::iterator it = request.begin();
+// 	it != request.end(); ++it) {
+// 	std::cout << "["; put_line(it->first); std::cout << "]";
+// 	std::cout << "("; put_line(it->second); std::cout << ")" << std::flush;
+// }
+// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+// std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
+// put_line(msg);
+// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+// std::cout << "msg:" << msg.size() << std::endl;
 
-	void	put_line(std::string line) {
-		for (std::string::iterator it = line.begin();
-			it != line.end(); ++it) {
-			if (*it==13)
-				std::cout << "(\\r)" << std::flush;
-			else if (*it==10)
-				std::cout << "(\\n)" << std::endl;
-			else if (*it > 31 && *it < 127)
-				std::cout << *it << std::flush;
-			else
-				std::cout << (int)*it << std::flush;
+	void	get_request_http( std::map<std::string, std::string> &request, const std::string &msg ) {		
+		std::stringstream	ss(msg);
+		std::string			line;
+		int					pos;
+
+		pos = msg.find_first_of(' ');
+		if (pos != -1)
+			request["Methode-http:"] = msg.substr(0, pos);
+		while (std::getline(ss, line)) {
+			line += '\n';
+			if (line.find("\r\n") == 0) {
+				while (std::getline(ss, line)) {
+					request["Request-Content"] += line + '\n';
+				}
+				return ;
+			}
+			pos = line.find_first_of(' ');
+			if (pos == -1)
+				continue ;
+			request[line.substr(0, pos)] = line.substr(pos + 1, \
+				line.find("\r\n") - (pos + 1));
 		}
 		return ;
 	}
 
 
-	void	parse_request_http( std::string msg ) {
-
-		std::map<std::string, std::string> request;
-		std::stringstream	ss(msg);
-		std::string			line;
-		size_t				pos;
-
-		if (std::getline(ss, line)) {
-			pos = line.find(' ');
-			request[line.substr(0, pos)] = line.substr(pos + 1, line.size() - pos - 2);
-		}
-		while (std::getline(ss, line)) {
-			line += '\n';
-			// put_line(line);
-			if (line.size() == 2 && line.find("\r\n") == 0) {
-				std::string	tmp;
-				while (std::getline(ss, line))
-					tmp += line + '\n';
-				request["Request_content"] = tmp;
-				// std::cout << "//////////// TMP //////////" << std::endl;
-				// put_line(tmp);
-				// std::cout << "//////////// TMP //////////" << std::endl;
-			}
-			else if (line.size() > 0) {
-				pos = line.find(":");
-				request[line.substr(0, pos)] = line.substr(pos + 2, line.size() - pos - 3);
-			}
-		}
-
-		// for (std::map<std::string, std::string>::iterator it = request.begin();
-		// 	it != request.end(); ++it) {
-		// 	if (it->first != "Request_content")
-		// 		std::cout << "Key [" << it->first << "] Value [" << it->second << "]" << std::endl;
-		// }
-
-		for (int i = 0; g_array_method[i].empty() == false; ++i)
-			if (request.count(g_array_method[i]))
+	void	choose_methode_http( std::map<std::string, std::string> &request ) {
+		for (int i = 0; g_array_method[i].empty() == false; ++i) {
+			if (request.count(g_array_method[i])) {
 				switch (i) {
 					case 0: get_request_get(request); return ;
 					case 1: std::cout << "HEAD" << std::endl; return ;
@@ -112,96 +123,52 @@ private:
 					case 8: std::cout << "DELETE" << std::endl; return ;
 					default: std::cout << "Missing path" << std::endl; return ;
 				}
+			}
+		}
 		return ;
 	}
 
+
+	void	ret_request_http( const std::map<std::string, std::string> &request, \
+		const std::string &msg, const int error_code ) {
+		// std::cout << "[[[";
+		// put_line(msg);
+		// std::cout << "]]]" << std::endl;
+		try {
+			signal(SIGPIPE, Error_exception::socket_close);
+			if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0)
+				Error_exception::bad_send;
+			signal(SIGPIPE, SIG_DFL);
+			std::cout << request.at("Host:")  << " - -" << getDateAndTime() \
+				<< " " << request.at("Methode-http:") << " " \
+				<< request.at(request.at("Methode-http:")) + "\" " \
+				<< error_code << " " << msg.size() << \
+				" \"-\" \"" << request.at("User-Agent:") + "\"" \
+				<< std::endl;
+		} catch ( const Error_exception &e) { ret_request_http(request, _parser.get_file_internal_server_error(), 500); }
+		
+		return ;
+	}
 
 	# include "./request_http/request_get.hpp"
 
-
-	std::string	get_request_post_boudary(std::string &content_type) {
-		int			pos = content_type.find("boundary=");
-		if (pos == -1)
-			Error_exception::bad_post("No boundary in Content-Type");
-		pos += strlen("boundary=");
-		std::string	boundary = "--" + content_type.substr(pos, \
-			content_type.find_first_of("\r\n") - pos);
-		return (boundary);
-	}
-
-
-	void	set_request_post_data(std::string &tmp, const std::string &boundary) {
-		tmp = tmp.substr(tmp.find(boundary) + boundary.size());
-		if (tmp == "--\r\n")
-			return ;
-		int pos = tmp.find("filename=\"");
-		if (pos == -1)
-			Error_exception::bad_post("can't find filename");
-		pos += strlen("filename=\"");
-		std::string 	filename = tmp.substr(pos, tmp.find_first_of("\"\r\n", pos) - pos);
-		std::ofstream	img(("test_" + filename).c_str(), std::ios::out | std::ofstream::binary);
-		if (img.is_open() == false)
-			Error_exception::bad_post("File is not open Phap");
-		pos = tmp.find("\r\n\r\n") + 4;
-		std::string		data = tmp.substr(pos, tmp.find(boundary) - pos - 2);
-		//std::cout << "//////////// " << filename << " //////////" << std::endl;
-		//put_line(data);
-		//std::cout << "\n//////////// " << filename << " //////////" << std::endl;
-		//std::cout << "size: " << data.size() << std::endl;
-		img.write(data.c_str(), data.size());
-		if (img.good()) 
-    		std::cout << "File written successfully\n";
-  		else 
-    		std::cerr << "Error writing file\n";
-  
-		img.close();
-
-		//set_request_post_data(tmp, boundary);
-	}
-
-
-	void	get_request_post( std::map<std::string, std::string> &request ) {
-		std::cout << std::endl;
-		std::cout << "POST" << std::endl;
-		std::cout << request["Request_content"].size() << std::endl;
-
-		try {
-			if (!request.count("Content-Type"))
-				Error_exception::bad_post("No Content-Type");
-			std::string	boundary = get_request_post_boudary(request["Content-Type"]);
-			
-			// std::cout << "//////////// BOUNDARY //////////" << std::endl;
-			// put_line(boundary);
-			// std::cout << "//////////// BOUNDARY //////////" << std::endl;
-
-			set_request_post_data(request["Request_content"], boundary);
-			std::cout << "\r\n$$$$$$$$$$$$$$$$ template.png $$$$$$$$$$$$$$$$$" << std::endl;
-		{
-			std::ifstream	is("template.png", std::ofstream::binary);
-		
-			char * buffer = new char [2];
-			std::string	buff;
-		
-			while (is.read (buffer, 1))
-				buff += buffer[0];
-			put_line(buff); std::cout << "\nsize:" << buff.size() << std::endl;
-		
-			is.close();
-		
-			delete[] buffer;
-		}
-		std::cout << "\r\n$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$" << std::endl;
-
-		} catch (const Error_exception &e) {
-			std::cout << e.what() << std::endl;
-		}
-		return ;
-	}
+	# include "./request_http/request_post.hpp"
 
 };
 
 
 #endif
+
+	// 200 OK: The server has successfully processed the request.
+    // 201 Created: The server has successfully created a new resource as a result of the request.
+    // 204 No Content: The server has successfully processed the request, but there is no content to send back.
+    // 400 Bad Request: The server cannot process the request because it is malformed or incorrect.
+    // 401 Unauthorized: The client is not authorized to access the requested resource.
+    // 403 Forbidden: The client does not have permission to access the requested resource.
+    // 404 Not Found: The requested resource does not exist on the server.
+    // 405 Method Not Allowed: The server does not support the requested method (e.g. POST, GET, PUT, DELETE) for the requested resource.
+    // 500 Internal Server Error: The server encountered an unexpected condition that prevented it from fulfilling the request.
+
 
 		// std::cout << request["Request_content"].size() << std::endl;
 		

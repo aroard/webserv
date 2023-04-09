@@ -9,8 +9,6 @@ int main(int argc, char **argv)
 
 	Server	serv("127.0.0.1", parser[0]);
 
-	std::cout << (int)'\r' << " et " << (int)'\n' << std::endl;
-
 	serv.start();
 
 	return (0);

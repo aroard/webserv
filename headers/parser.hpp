@@ -35,6 +35,7 @@ public:
 		_file_conf.read(buffer, length);
 		_data_conf = buffer;
 		parse_all_file();
+		set_file_http();
 	}
 
 	Parser( const Parser &o ) {
@@ -60,6 +61,13 @@ public:
 		_limit_request = o._limit_request;
 		_method_lists = o._method_lists;
 		_cgi_php = o._cgi_php;
+		_file_created = o._file_created;
+		_file_bad_request = o._file_bad_request;
+		_file_unauthorized = o._file_unauthorized;
+		_file_forbidden = o._file_forbidden;
+		_file_not_found = o._file_not_found;
+		_file_methode_not_allowed = o._file_methode_not_allowed;
+		_file_internal_server_error = o._file_internal_server_error;
 		return (*this);
 	}
 
@@ -79,6 +87,13 @@ public:
 		new_parser._limit_request.push_back(std::pair<int, int>(1, get_limit_request(i)));
 		new_parser._method_lists.push_back(std::pair<int, std::list<std::string> >(1, get_method_lists(i)));
 		new_parser._cgi_php.push_back(std::pair<int, std::string>(1, get_cgi_php(i)));
+		new_parser._file_created = _file_created;
+		new_parser._file_bad_request = _file_bad_request;
+		new_parser._file_unauthorized = _file_unauthorized;
+		new_parser._file_forbidden = _file_forbidden;
+		new_parser._file_not_found = _file_not_found;
+		new_parser._file_methode_not_allowed = _file_methode_not_allowed;
+		new_parser._file_internal_server_error = _file_internal_server_error;
 		return (new_parser);
 	}
 

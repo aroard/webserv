@@ -1,5 +1,5 @@
-#ifndef __REQUEST_POST_HPP__
-# define __REQUEST_POST_HPP__
+#ifndef __REQUEST_GET_HPP__
+# define __REQUEST_GET_HPP__
 
 int open_files( std::ifstream &open, std::string &path, std::string &msg )
 {
@@ -149,8 +149,8 @@ void	error_and_access_log(int error_code, std::string &msg, std::map<std::string
 		}
 	}
 	outfile.open(file.c_str(), std::ofstream::out | std::ofstream::app);
-	outfile << request["Host"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
-			<< error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent"] + "\"" << std::endl;
+	outfile << request["Host:"]  << " - -" << getDateAndTime() << " \"GET "  << request["GET"] + "\" "
+			<< error_code << " " << msg.size() << " \"-\" \"" << request["User-Agent:"] + "\"" << std::endl;
 	outfile.close();
 }
 
@@ -163,7 +163,7 @@ void	get_request_get( std::map<std::string, std::string> &request) {
 	path = _parser.get_root(0);
 	if (path[path.size() - 1] == '/')
 		path.erase(path.size() - 1);
-	path += request["GET"].substr(0, request["GET"].find(" "));
+	path += request["GET"].substr(0, request["GET"].find_first_of(' '));
 
 	error_code = open_files(web_page, path, msg);
 	if (error_code != 404 && path.size() > 4 \

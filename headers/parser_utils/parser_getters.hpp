@@ -1,6 +1,7 @@
 #ifndef __PARSER_GETTERS_HPP__
 # define __PARSER_GETTERS_HPP__
 
+
 std::vector<std::pair<int, std::list<int> > >			get_port( void ) { return (_port); }
 std::vector<std::pair<int, std::string> >				get_server_name( void ) { return (_server_name); }
 std::vector<std::pair<int, std::string> >				get_root( void ) { return (_root); }
@@ -64,5 +65,15 @@ std::list<std::string>		get_method_lists( size_t num_conf ) const {
 std::string					get_cgi_php( size_t num_conf ) const {
 	return (_cgi_php.empty() ? std::string() : num_conf < _cgi_php.back().first ? _cgi_php[num_conf].second : std::string());
 }
+
+
+std::string					get_file_created( void ) const { return (_file_created); }
+std::string					get_file_bad_request( void ) const { return (_file_bad_request); }
+std::string					get_file_unauthorized( void ) const { return (_file_unauthorized); }
+std::string					get_file_forbidden( void ) const { return (_file_forbidden); }
+std::string					get_file_not_found( void ) const { return (_file_not_found); }
+std::string					get_file_methode_not_allowed( void ) const { return (_file_methode_not_allowed); }
+std::string					get_file_internal_server_error( void ) const { return (_file_internal_server_error); }
+
 
 #endif

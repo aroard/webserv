@@ -38,19 +38,22 @@ class Client;
 class Error_exception {
 private:
 	std::string _msg_err;
+	int			_error_code;
 public:
-	Error_exception( const std::string &msg_err ) : _msg_err(msg_err) {}
-	static void bad_send( void ) { throw Error_exception("Bad send"); }
-	static void socket_close( int signum ) { 
-		throw Error_exception("Socket is closing");
+	Error_exception( const std::string &msg_err, const int error_code ) 
+		: _msg_err(msg_err), _error_code(error_code) {}
+	static void bad_send( void ) { throw Error_exception("Bad send", 1); }
+	
+	static void socket_close( int signum ) { throw Error_exception("Socket is closing", 1); }
+	
+	static void interruption_server( int signum ) { throw Error_exception("\rServer is down", 0);}
+	
+	static void error( const std::string &msg_err, const int error_code ) { 
+		throw Error_exception(msg_err, error_code);
 	}
-	static void interruption_server( int signum ) { 
-		throw Error_exception("\rServer is down");
+	const std::pair<std::string, int>	what( void ) const { 
+		return (std::pair<std::string, int>(_msg_err, _error_code)); 
 	}
-	static void bad_post( const std::string &msg_err ) { 
-		throw Error_exception(msg_err);
-	}
-	const char	*what( void ) const { return (_msg_err.c_str()); }
 };
 
 
@@ -66,6 +69,21 @@ const std::string	g_config_methode[] = {	"listen", "server_name", "root", \
 											"index", "error_log", "access_log", \
 											"error_page", "limit_request", \
 											"method_lists", "cgi_php", "#", ""};
+
+	void	put_line( std::string line ) {
+		for (std::string::iterator it = line.begin();
+			it != line.end(); ++it) {
+			if (*it==13)
+				std::cout << "(\\r)" << std::flush;
+			else if (*it==10)
+				std::cout << "(\\n)" << std::endl;
+			else if (*it > 31 && *it < 127)
+				std::cout << *it << std::flush;
+			else
+				std::cout << (int)*it << std::flush;
+		}
+		return ;
+	}
 
 
 # include "parser.hpp"
