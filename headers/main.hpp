@@ -26,6 +26,7 @@
 # include <sys/event.h>
 # include <sys/time.h>
 # include <string>
+# include <cerrno>
 
 # ifndef MAX_LISTEN
 #  define MAX_LISTEN 128
@@ -60,10 +61,6 @@ public:
 const std::string	g_month[] = {	"Jan", "Feb", "Mar", "Apr", \
 									"May", "Jun", "Jul", "Aug", \
 									"Sep", "Oct", "Nov", "Dec" };
-
-const std::string	g_array_method[] = {"GET", "HEAD", "POST", \
-										"OPTIONS", "CONNECT", "TRACE", \
-										"PUT", "PATCH", "DELETE", "" };
 
 const std::string	g_config_methode[] = {	"listen", "server_name", "root", \
 											"index", "error_log", "access_log", \

@@ -1,6 +1,6 @@
 #ifndef __PARSER_HPP__
 # define __PARSER_HPP__
-void parse_all_parameters(void);
+
 
 class Parser
 {
@@ -48,6 +48,7 @@ public:
 			_file_conf.close();
 	}
 
+
 	Parser&	operator=( const Parser &o) {
 		_path_conf = o._path_conf; _file_conf.open(o._path_conf.c_str());
 		_data_conf = o._data_conf; _nb_conf_serv = o._nb_conf_serv;
@@ -71,6 +72,7 @@ public:
 		return (*this);
 	}
 
+
 	Parser	operator[]( size_t i ) {
 		Parser	new_parser;
 
@@ -81,8 +83,8 @@ public:
 		new_parser._server_name.push_back(std::pair<int, std::string>(1, get_server_name(i)));
 		new_parser._root.push_back(std::pair<int, std::string>(1, get_root(i)));
 		new_parser._index.push_back(std::pair<int, std::list<std::string> >(1, get_index(i)));
-		new_parser._error_log.push_back(std::pair<int, std::string>(1, get_error_log(i)));
-		new_parser._access_log.push_back(std::pair<int, std::string>(1, get_access_log(i)));
+		new_parser._error_log.push_back(std::pair<int, std::pair<std::string, int> >(1, get_error_log(i)));
+		new_parser._access_log.push_back(std::pair<int, std::pair<std::string, int> >(1, get_access_log(i)));
 		new_parser._error_page.push_back(std::pair<int, std::string>(1, get_error_page(i)));
 		new_parser._limit_request.push_back(std::pair<int, int>(1, get_limit_request(i)));
 		new_parser._method_lists.push_back(std::pair<int, std::list<std::string> >(1, get_method_lists(i)));
@@ -96,6 +98,7 @@ public:
 		new_parser._file_internal_server_error = _file_internal_server_error;
 		return (new_parser);
 	}
+
 
 private:
 
@@ -236,6 +239,16 @@ private:
 
 	# include "./parser_utils/parser_setters.hpp"
 
+	int	count_line_in_file( const std::string &path ) {
+		std::ifstream	file(path.c_str(), std::ifstream::in);
+		int				count = 0;
+
+		if (file.is_open())
+			for (std::string tmp; std::getline(file, tmp);)
+				++count;
+		return (count);
+	}
+
 	void	parse_all_parameters( void ) {
 		if (get_port(_nb_conf_serv - 1).empty()) {
 			std::list<int> empty_list(1, 8080);
@@ -252,24 +265,26 @@ private:
 			}
 		if (get_server_name(_nb_conf_serv - 1).empty()) 
 			_server_name.push_back(std::pair<int, std::string>(_nb_conf_serv, "dinopoulet.42.fr"));
-		if (get_root(_nb_conf_serv - 1).empty())
-			_root.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/"));
+		// if (get_root(_nb_conf_serv - 1).empty())
+			// _root.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/"));
 		if (get_index(_nb_conf_serv - 1).empty()) {
 			std::list<std::string> empty_list;
 			empty_list.push_back("index.html");
 			empty_list.push_back("index.php");
 			_index.push_back(std::pair<int, std::list<std::string> >(_nb_conf_serv, empty_list));
 		}
-		if (get_error_log(_nb_conf_serv - 1).empty())
-			_error_log.push_back(std::pair<int, std::string>(_nb_conf_serv, "./logs/error.log"));
-		if (get_access_log(_nb_conf_serv - 1).empty())
-			_access_log.push_back(std::pair<int, std::string>(_nb_conf_serv, "./logs/access.log"));
+		if (get_error_log(_nb_conf_serv - 1).first.empty())
+			_error_log.push_back(std::pair<int, std::pair<std::string, int> >(_nb_conf_serv, \
+				std::pair<std::string, int>("./logs/error.log", count_line_in_file("./logs/error.log"))));
+		if (get_access_log(_nb_conf_serv - 1).first.empty())
+			_access_log.push_back(std::pair<int, std::pair<std::string, int> >(_nb_conf_serv, \
+				std::pair<std::string, int>("./logs/access.log", count_line_in_file("./logs/access.log"))));
 		if (get_error_page(_nb_conf_serv - 1).empty())
-			_error_page.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/error_pages/NotFound.html"));
+			_error_page.push_back(std::pair<int, std::string>(_nb_conf_serv, "./tools/not_found.html"));
 		if (_limit_request.empty())	
 			_limit_request.push_back(std::pair<int, int>(_nb_conf_serv, 1024));
 		else {			
-			if (get_limit_request(_nb_conf_serv - 1) < 1024 || get_limit_request(_nb_conf_serv - 1) > 4096) {
+			if (get_limit_request(_nb_conf_serv - 1) < 1024 || get_limit_request(_nb_conf_serv - 1) > 102400) {
 				std::cerr << "Error: Limit request must be between 1024-4096" << std::endl;
 				exit(1);
 			} 
@@ -284,14 +299,15 @@ private:
 
 		}
 		{
+			const char	*method[] = { "GET", "POST", "DELETE", "" };
 			std::list<std::string> ls = get_method_lists(_nb_conf_serv - 1);
 			for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it) {
 				int a;
-				for (a = 0; a < (sizeof(g_array_method) / sizeof(g_array_method[0])); a++) {
-					if (g_array_method[a] == *it)
+				for (a = 0; strlen(method[a]); a++) {
+					if (method[a] == *it)
 						break;
 				}		
-				if (a == (sizeof(g_array_method) / sizeof(g_array_method[0]))) {
+				if (!strlen(method[a])) {
 					std::cout << "Invalid method list:" << *it << std::endl;
 					exit(EXIT_FAILURE);
 				}
@@ -318,9 +334,11 @@ std::ostream&	operator<<( std::ostream &o, const Parser &p) {
 		std::cout << "Root[" << i << "]\t\t\t: " << p.get_root(i) << std::endl;
 		std::cout << "Index[" << i << "]\t\t: "; { std::list<std::string> ls = p.get_index(i);
 		for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it)
-			std::cout << "(" << *it << ")"; std::cout << std::endl; }
-		std::cout << "Error_log[" << i << "]\t\t: " << p.get_error_log(i) << std::endl;
-		std::cout << "Access_log[" << i << "]\t\t: " << p.get_access_log(i) << std::endl;
+			std::cout << "(" << *it << ")"; std::cout << std::endl; } 
+		{ std::pair<std::string, int> pr = p.get_error_log(i);
+		std::cout << "Error_log[" << i << "]\t\t: " << pr.first << ": " << pr.second << std::endl;
+		} { std::pair<std::string, int> pr = p.get_access_log(i);
+		std::cout << "Access_log[" << i << "]\t\t: " << pr.first << ": " << pr.second << std::endl; }
 		std::cout << "Error_page[" << i << "]\t\t: " << p.get_error_page(i) << std::endl;
 		std::cout << "Limit_request[" << i << "]\t: " << p.get_limit_request(i) << std::endl;
 		std::cout << "Method_request[" << i << "]\t: "; { std::list<std::string> ls = p.get_method_lists(i);

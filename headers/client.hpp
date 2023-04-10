@@ -5,13 +5,13 @@
 class Client
 {
 private:
-	int				_socketClient;
-	const Parser	_parser;
+	int		_socketClient;
+	Parser	&_parser;
 
 	Client( void );
 
 public:
-	explicit Client(int socketServer, Parser parser) : _parser(parser) {
+	explicit Client(int socketServer, Parser &parser) : _parser(parser) {
 		if ((_socketClient = accept(socketServer, NULL, NULL)) < 0) {
 			perror("ERRPR accept"); exit(EXIT_FAILURE);
 		}
@@ -55,32 +55,21 @@ private:
 				break ;
 		}
 		get_request_http(request, msg);
-		// std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
-		// for (std::map<std::string, std::string>::iterator it = request.begin();
-		// 	it != request.end(); ++it) {
-		// 	std::cout << "["; put_line(it->first); std::cout << "]";
-		// 	std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
-		// }
-		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-		// std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
-		// put_line(msg);
-		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-		// std::cout << "msg:" << msg.size() << std::endl;
+		std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
+		for (std::map<std::string, std::string>::iterator it = request.begin();
+			it != request.end(); ++it) {
+			std::cout << "["; put_line(it->first); std::cout << "]";
+			std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
+		}
+		std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
+		put_line(msg);
+		std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		std::cout << "msg:" << msg.size() << std::endl;
 		choose_methode_http(request);
 		delete[] tmp;
 	}
 
-// std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
-// for (std::map<std::string, std::string>::iterator it = request.begin();
-// 	it != request.end(); ++it) {
-// 	std::cout << "["; put_line(it->first); std::cout << "]";
-// 	std::cout << "("; put_line(it->second); std::cout << ")" << std::flush;
-// }
-// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-// std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
-// put_line(msg);
-// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-// std::cout << "msg:" << msg.size() << std::endl;
 
 	void	get_request_http( std::map<std::string, std::string> &request, const std::string &msg ) {		
 		std::stringstream	ss(msg);
@@ -96,6 +85,11 @@ private:
 				while (std::getline(ss, line)) {
 					request["Request-Content"] += line + '\n';
 				}
+				pos = request["Request-Content"].find("Methode-http=");
+				if (pos != -1) { pos += 13;
+					request["Methode-http:"] = request["Request-Content"].substr(\
+						pos, request["Request-Content"].find_first_of("%%&\r\n", pos) - pos);
+				}
 				return ;
 			}
 			pos = line.find_first_of(' ');
@@ -109,50 +103,129 @@ private:
 
 
 	void	choose_methode_http( std::map<std::string, std::string> &request ) {
-		for (int i = 0; g_array_method[i].empty() == false; ++i) {
-			if (request.count(g_array_method[i])) {
-				switch (i) {
-					case 0: get_request_get(request); return ;
-					case 1: std::cout << "HEAD" << std::endl; return ;
-					case 2: get_request_post(request); return ;
-					case 3: std::cout << "OPTIONS" << std::endl; return ;
-					case 4: std::cout << "CONNECT" << std::endl; return ;
-					case 5: std::cout << "TRACE" << std::endl; return ;
-					case 6: std::cout << "PUT" << std::endl; return ;
-					case 7: std::cout << "PATCH" << std::endl; return ;
-					case 8: std::cout << "DELETE" << std::endl; return ;
-					default: std::cout << "Missing path" << std::endl; return ;
+		try {
+			std::list<std::string>	ls = _parser.get_method_lists(0);
+			for (std::list<std::string>::iterator it = ls.begin();
+				it != ls.end(); ++it) {
+				if (request.count(*it)) {
+					if (request["Methode-http:"] == "GET") get_request_get(request);
+					else if (request["Methode-http:"] == "POST") get_request_post(request);
+					else if (request["Methode-http:"] == "DELETE") get_request_delete(request);
+					else ret_request_http(request, _parser.get_file_methode_not_allowed(), 405); 
+					return ;
 				}
 			}
+		} catch (const Error_exception &e) { 
+			ret_request_http(request, e.what().first, e.what().second); 
 		}
+		return ;
+	}
+
+
+	std::string	getDateAndTime( void ) {
+		std::stringstream	ss;
+		std::time_t			t = std::time(NULL);
+		std::tm 			*now = std::gmtime(&t);
+			
+		ss << std::setw(2) << "[" << now->tm_mday << "/";
+		ss << g_month[now->tm_mon] << "/";
+		ss << std::setw(2) << (now->tm_year + 1900) << ":";
+	   	ss << std::setw(2) << std::setfill('0') << now->tm_hour << ":";
+	   	ss << std::setw(2) << std::setfill('0') << now->tm_min << ":";
+	   	ss << std::setw(2) << std::setfill('0') << now->tm_sec << " +0000]";
+		return ss.str();
+	}
+
+
+	int	trunc_log_file( const std::string &path ) {
+		std::ifstream	input_file(path.c_str(), std::ifstream::in);
+		std::string		line_file;
+		std::string		data_file;
+		int 			nb_line = 0;
+
+		if (input_file.is_open()) {
+			for (int count = 0; std::getline(input_file, line_file); ++count) {
+				if (count >= 30) {
+					++nb_line;
+					data_file += line_file + '\n';
+				}
+			}
+			input_file.close();
+		}
+		std::ofstream	output_file(path.c_str(), std::ofstream::out | std::ofstream::trunc);
+		if (output_file.is_open()) {
+			output_file.write(data_file.c_str(), data_file.size());
+			output_file.close();
+		}
+		return (nb_line);
+	}
+
+
+	void	get_log_file( std::ofstream &log_file, const int &error_code ) {
+
+		if (error_code == 200 || error_code == 201) {
+			std::string path = _parser.get_access_log(0).first;
+			int			nb_line = _parser.get_access_log(0).second;
+			if (++nb_line > 50)
+				nb_line = trunc_log_file(path);
+			_parser.set_line_access_log(0, nb_line);
+			log_file.open(path.c_str(), \
+				std::ofstream::out | std::ofstream::app);
+		}
+		else {
+			std::string path = _parser.get_error_log(0).first;
+			int			nb_line = _parser.get_error_log(0).second;
+			if (++nb_line > 50)
+				nb_line = trunc_log_file(path);
+			_parser.set_line_error_log(0, nb_line);
+			log_file.open(path.c_str(), \
+				std::ofstream::out | std::ofstream::app);
+		}
+		if (!log_file.is_open())
+			Error_exception::error(_parser.get_file_internal_server_error(), 500);
 		return ;
 	}
 
 
 	void	ret_request_http( const std::map<std::string, std::string> &request, \
 		const std::string &msg, const int error_code ) {
-		// std::cout << "[[[";
-		// put_line(msg);
-		// std::cout << "]]]" << std::endl;
+
 		try {
 			signal(SIGPIPE, Error_exception::socket_close);
 			if (send(_socketClient, msg.c_str(), msg.size(), 0) < 0)
 				Error_exception::bad_send;
 			signal(SIGPIPE, SIG_DFL);
-			std::cout << request.at("Host:")  << " - -" << getDateAndTime() \
-				<< " " << request.at("Methode-http:") << " " \
-				<< request.at(request.at("Methode-http:")) + "\" " \
-				<< error_code << " " << msg.size() << \
-				" \"-\" \"" << request.at("User-Agent:") + "\"" \
-				<< std::endl;
-		} catch ( const Error_exception &e) { ret_request_http(request, _parser.get_file_internal_server_error(), 500); }
-		
+			std::ofstream	log_file;
+			get_log_file(log_file, error_code);
+			if (log_file.is_open()) {
+				if (request.count("Host:"))
+					log_file << request.at("Host:");
+				log_file << " - -"<< getDateAndTime() << ' ';
+				if (request.count("Methode-http:")) {
+					log_file << request.at("Methode-http:") + ' ';
+					if (request.count(request.at("Methode-http:")))
+						log_file << request.at(request.at("Methode-http:")) \
+							<< ' ' << request.at(request.at("Methode-http:")) << "\" ";
+				}
+				else
+					log_file << " \" ";
+				log_file << error_code << " " << msg.size() << " \"-\" \"";
+				if (request.count("User-Agent:"))
+					log_file << request.at("User-Agent:");
+				log_file << "\"\n";
+				log_file.close();
+			}
+		} catch ( const Error_exception &e) { 
+			ret_request_http(request, e.what().first, e.what().second); 
+		}
 		return ;
 	}
 
 	# include "./request_http/request_get.hpp"
 
 	# include "./request_http/request_post.hpp"
+
+	# include "./request_http/request_delete.hpp"
 
 };
 

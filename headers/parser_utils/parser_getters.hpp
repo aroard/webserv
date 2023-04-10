@@ -2,16 +2,16 @@
 # define __PARSER_GETTERS_HPP__
 
 
-std::vector<std::pair<int, std::list<int> > >			get_port( void ) { return (_port); }
-std::vector<std::pair<int, std::string> >				get_server_name( void ) { return (_server_name); }
-std::vector<std::pair<int, std::string> >				get_root( void ) { return (_root); }
-std::vector<std::pair<int, std::list<std::string> > >	get_index( void ) { return (_index); }
-std::vector<std::pair<int, std::string> >				get_error_log( void ) { return (_error_log); }
-std::vector<std::pair<int, std::string> >				get_access_log( void ) { return (_access_log); }
-std::vector<std::pair<int, std::string> >				get_error_page( void ) { return (_error_page); }
-std::vector<std::pair<int, int> >						get_limit_request( void ) { return (_limit_request); }
-std::vector<std::pair<int, std::list<std::string> > >	get_method_lists( void ) { return (_method_lists); }
-std::vector<std::pair<int, std::string> >				get_cgi_php( void ) { return (_cgi_php); }
+std::vector<std::pair<int, std::list<int> > >				get_port( void ) { return (_port); }
+std::vector<std::pair<int, std::string> >					get_server_name( void ) { return (_server_name); }
+std::vector<std::pair<int, std::string> >					get_root( void ) { return (_root); }
+std::vector<std::pair<int, std::list<std::string> > >		get_index( void ) { return (_index); }
+std::vector<std::pair<int, std::pair<std::string, int> > >	get_error_log( void ) { return (_error_log); }
+std::vector<std::pair<int, std::pair<std::string, int> > >	get_access_log( void ) { return (_access_log); }
+std::vector<std::pair<int, std::string> >					get_error_page( void ) { return (_error_page); }
+std::vector<std::pair<int, int> >							get_limit_request( void ) { return (_limit_request); }
+std::vector<std::pair<int, std::list<std::string> > >		get_method_lists( void ) { return (_method_lists); }
+std::vector<std::pair<int, std::string> >					get_cgi_php( void ) { return (_cgi_php); }
 
 
 int							get_nb_conf_serv( void ) const { return (_nb_conf_serv); }
@@ -37,13 +37,13 @@ std::list<std::string>		get_index( size_t num_conf ) const {
 }
 
 
-std::string					get_error_log( size_t num_conf ) const {
-	return (_error_log.empty() ? std::string() : num_conf < _error_log.back().first ? _error_log[num_conf].second : std::string()); 
+std::pair<std::string, int>	get_error_log( size_t num_conf ) const {
+	return (_error_log.empty() ? std::pair<std::string, int>() : num_conf < _error_log.back().first ? _error_log[num_conf].second : std::pair<std::string, int>()); 
 }
 
 
-std::string					get_access_log( size_t num_conf ) const {
-	return (_access_log.empty() ? std::string() : num_conf < _access_log.back().first ? _access_log[num_conf].second : std::string());
+std::pair<std::string, int>	get_access_log( size_t num_conf ) const {
+	return (_access_log.empty() ? std::pair<std::string, int>() : num_conf < _access_log.back().first ? _access_log[num_conf].second : std::pair<std::string, int>());
 }
 
 

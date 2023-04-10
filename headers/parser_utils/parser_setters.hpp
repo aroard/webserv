@@ -1,16 +1,18 @@
 #ifndef __PARSER_SETTERS_HPP__
 # define __PARSER_SETTERS_HPP__
 
-std::vector<std::pair<int, std::list<int> > >			_port;
-std::vector<std::pair<int, std::string> >				_server_name;
-std::vector<std::pair<int, std::string> >				_root;
-std::vector<std::pair<int, std::list<std::string> > >	_index;
-std::vector<std::pair<int, std::string> >				_error_log;
-std::vector<std::pair<int, std::string> >				_access_log;
-std::vector<std::pair<int, std::string> >				_error_page;
-std::vector<std::pair<int, int> >						_limit_request;
-std::vector<std::pair<int, std::list<std::string> > >	_method_lists;
-std::vector<std::pair<int, std::string> >				_cgi_php;
+
+std::vector<std::pair<int, std::list<int> > >				_port;
+std::vector<std::pair<int, std::string> >					_server_name;
+std::vector<std::pair<int, std::string> >					_root;
+std::vector<std::pair<int, std::list<std::string> > >		_index;
+std::vector<std::pair<int, std::pair<std::string, int> > >	_error_log;
+std::vector<std::pair<int, std::pair<std::string, int> > >	_access_log;
+std::vector<std::pair<int, std::string> >					_error_page;
+std::vector<std::pair<int, int> >							_limit_request;
+std::vector<std::pair<int, std::list<std::string> > >		_method_lists;
+std::vector<std::pair<int, std::string> >					_cgi_php;
+
 
 std::pair<int, std::list<std::string> >	parse_template_set( std::string &tmp ) {
 	int	pos = _data_conf.find(";") - tmp.size();
@@ -138,7 +140,9 @@ void	set_error_log( std::string &tmp ) {
 	}
 	if (!parse_logfiles(error_log.second.front()))
 		exit(EXIT_FAILURE);
-	_error_log.push_back(std::pair<int, std::string>(error_log.first, error_log.second.front()));
+	_error_log.push_back(std::pair<int, std::pair<std::string, int> >(error_log.first, \
+		std::pair<std::string, int>(error_log.second.front(), \
+		count_line_in_file(error_log.second.front()))));
 	return ;
 }
 
@@ -152,7 +156,9 @@ void	set_access_log( std::string &tmp ) {
 	}
 	if (!parse_logfiles(access_log.second.front()))
 		exit(EXIT_FAILURE);
-	_access_log.push_back(std::pair<int, std::string>(access_log.first, access_log.second.front()));
+	_access_log.push_back(std::pair<int, std::pair<std::string, int> >(access_log.first, \
+		std::pair<std::string, int>(access_log.second.front(), \
+		count_line_in_file(access_log.second.front()))));
 	return ;
 }
 
@@ -211,6 +217,22 @@ void	set_comment_line( std::string &tmp ) {
 	return ;
 }
 
+public:
+	void	set_line_error_log( size_t num_conf, int nb_line ) {
+		if (!_error_log.empty() && num_conf < _error_log.back().first)
+			_error_log[num_conf].second.second = nb_line;
+	}
+
+
+	void	set_line_access_log( size_t num_conf, int nb_line ) {
+		if (!_access_log.empty() && num_conf < _access_log.back().first) {
+			_access_log[num_conf].second.second = nb_line;
+		}
+	}
+
+private:
+
+
 std::string	_file_created; // 201
 std::string	_file_bad_request; // 400
 std::string	_file_unauthorized; // 401
@@ -219,9 +241,10 @@ std::string	_file_not_found; // 404
 std::string	_file_methode_not_allowed; // 405
 std::string	_file_internal_server_error; // 500
 
+
 void	set_file_http( void ) {
 	const char	*path_file[] = { "./tools/created.html", "./tools/bad_request.html", \
-								 "./tools/unauthorized.html", "./tools/forbiden.html", \
+								 "./tools/unauthorized.html", "./tools/forbidden.html", \
 								 "./tools/not_found.html", "./tools/method_not_allowed.html", \
 								 "./tools/internal_server_error.html", "" };
 	char		buffer[256];
@@ -240,9 +263,11 @@ void	set_file_http( void ) {
 			data_file = std::string("Content-Type: text/html\r\nContent-Length: ") \
 			+ buffer + "\r\n\r\n" + data_file;
 		}
-		else
+		else {
+			// std::cout << "[[[" << path_file[i] << "]]]" << std::endl;
 			data_file += "Content-Type: text/html\r\nContent-Length: 57\r\n\r\n\
 <html><body>Internal file loading error</body></html>\r\n";
+		}
 		switch (i) {
 			case 0: _file_created = "HTTP/1.1 201 Created\r\n" + data_file; break;
 			case 1: _file_bad_request = "HTTP/1.1 400 Bad Request\r\n" + data_file; break;
@@ -256,5 +281,6 @@ void	set_file_http( void ) {
 	}
 	return ;
 }
+
 
 #endif

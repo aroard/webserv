@@ -9,13 +9,12 @@ private:
 	sockaddr_in		_confServer;
 	std::list<int>	_socketServer;
 	int				_socketClient;
-	std::string		_addr;
-	const Parser	_parser;
+	Parser			_parser;
 
 public:
 
-	explicit Server ( std::string addr = "127.0.0.1", Parser parser = Parser(1, NULL) ) \
-		: _addr(addr), _parser(parser) {
+	explicit Server ( Parser parser = Parser(1, NULL) ) \
+		: _parser(parser) {
 
 		std::list<int>	ls = _parser.get_port(0);
 		int				socketServer;
@@ -25,9 +24,7 @@ public:
 			if ((socketServer = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 				perror("ERROR socket"); exit(EXIT_FAILURE);
 			}
-			if ((_confServer.sin_addr.s_addr = inet_addr(_addr.c_str())) == 0) {
-				perror("ERROR inet_addr"); exit(EXIT_FAILURE);
-			}
+			_confServer.sin_addr.s_addr = INADDR_ANY;
 			_confServer.sin_family = AF_INET;
 			_confServer.sin_port = htons(*it);
 
@@ -97,9 +94,8 @@ private:
 					}
 				}
 			}
-		} catch (const Error_exception &e) {
-			// std::cout << e.what() << std::endl;
-		}
+		} catch ( ... ) {}
+		std::cout << "\rServer is down" << std::endl;
 		signal(SIGINT, SIG_DFL);
 		delete[] ev_get;
 	}
