@@ -1,14 +1,126 @@
 <!DOCTYPE html>
 <html>
+
 <head>
-	<title>Uploader une photo</title>
+  <title>Upload and Delete File</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+    }
+
+    header {
+      background-color: #333;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin: 0;
+    }
+
+    nav {
+      background-color: #444;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 10px;
+    }
+
+    section {
+      padding: 20px;
+      text-align: center;
+    }
+
+    form {
+      padding: 20px;
+      margin: 20px;
+      background-color: #eee;
+      border-radius: 10px;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      text-align: left;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    input[type="file"] {
+      margin-bottom: 10px;
+    }
+
+    input[type="submit"] {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    input[type="submit"]:hover {
+      background-color: #3e8e41;
+    }
+
+    #delete-form {
+      padding: 20px;
+      margin: 20px;
+      background-color: #eee;
+      border-radius: 10px;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      text-align: left;
+    }
+
+    #delete-form label {
+      display: block;
+      margin-bottom: 10px;
+    }
+
+    #delete-form input[type="text"] {
+      margin-bottom: 10px;
+    }
+
+  </style>
 </head>
+
 <body>
-	<h1>Uploader une photo</h1>
-	<form action="upload.php" method="POST" enctype="multipart/form-data">
-		<label for="photo">Choisir une photo :</label>
-		<input type="file" id="photo" name="photo"><br><br>
-		<input type="submit" value="Uploader">
-	</form>
-</body>
-</html>
+  <header>
+    <h1>Upload and Delete File</h1>
+  </header>
+  <nav>
+    <a href="./index.html">Homepage</a>
+    <a href="./aboutus.html">About us</a>
+	<a href="upload.html">Upload</a>
+  </nav>
+  <section>
+    <form action="/upload" method="POST" enctype="multipart/form-data">
+      <label for="file">Choose a file to upload:</label>
+      <input type="file" id="file" name="file"><br><br>
+      <input type="submit" value="Upload">
+    </form>
+
+    <div id="delete-form" style="display:none;">
+      <form action="/delete" method="POST">
+        <label for="filename">Enter the filename to delete:</label>
+        <input type="text" id="filename" name="filename"><br><br>
+        <input type="submit" value="Delete">
+      </form>
+    </div>
+
+    <script>
+      document.querySelector('form').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const fileInput = document.querySelector('input[type="file"]');
+        if (fileInput.files.length > 0) {
+          document.querySelector('#delete-form').style.display =
