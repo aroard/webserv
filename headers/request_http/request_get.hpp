@@ -86,6 +86,7 @@ void	get_request_get( std::map<std::string, std::string> &request) {
 	if (path[path.size() - 1] == '/')
 		path.erase(path.size() - 1);
 	path += request["GET"].substr(0, request["GET"].find_first_of(' '));
+	path = urldecode(path);
 
 	open_files(web_page, path, msg);
 	if (path.size() > 4 \

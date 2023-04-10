@@ -55,17 +55,17 @@ private:
 				break ;
 		}
 		get_request_http(request, msg);
-		std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
-		for (std::map<std::string, std::string>::iterator it = request.begin();
-			it != request.end(); ++it) {
-			std::cout << "["; put_line(it->first); std::cout << "]";
-			std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
-		}
-		std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-		std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
-		put_line(msg);
-		std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-		std::cout << "msg:" << msg.size() << std::endl;
+		// std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
+		// for (std::map<std::string, std::string>::iterator it = request.begin();
+		// 	it != request.end(); ++it) {
+		// 	std::cout << "["; put_line(it->first); std::cout << "]";
+		// 	std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
+		// }
+		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		// std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
+		// put_line(msg);
+		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		// std::cout << "msg:" << msg.size() << std::endl;
 		choose_methode_http(request);
 		delete[] tmp;
 	}
@@ -219,6 +219,24 @@ private:
 			ret_request_http(request, e.what().first, e.what().second); 
 		}
 		return ;
+	}
+
+
+	std::string urldecode(const std::string& str) {
+		std::string decoded;
+		std::stringstream ss(str);
+		char c;
+		int value;
+		while (ss.get(c)) {
+			if (c == '+')
+				decoded += ' ';
+			else if (c == '%') {
+				if (ss >> std::hex >> value)
+					decoded += static_cast<char>(value);
+			} else
+				decoded += c;
+		}
+		return decoded;
 	}
 
 	# include "./request_http/request_get.hpp"
