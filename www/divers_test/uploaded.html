@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Upload de fichier</title>
+  </head>
+  <body>
+    <h1>Upload de fichier</h1>
+    <form action="upload.php" method="post" enctype="multipart/form-data">
+      <label for="file">Sélectionnez un fichier à uploader :</label>
+      <input type="file" name="file" id="file"><br><br>
+      <input type="submit" value="Uploader">
+    </form>
+    <div id="message"></div>
+    <script>
+      document.querySelector('form').addEventListener('submit', function(event) {
+        event.preventDefault(); // empêche la soumission du formulaire
+        var xhr = new XMLHttpRequest(); // crée un objet XMLHttpRequest
+        xhr.open('POST', 'upload.php'); // configure la requête
+        xhr.onload = function() {
+          if (xhr.status === 201) { // vérifie le statut de la réponse
+            document.querySelector('#message').innerHTML = 'Upload réussi !'; // affiche un message de succès
+          } else {
+            alert('Une erreur est survenue !');
+          }
+        };
+        var formData = new FormData(document.querySelector('form')); // crée un objet FormData
+        xhr.send(formData); // envoie la requête avec les données du formulaire
+      });
+    </script>
+  </body>
+</html>

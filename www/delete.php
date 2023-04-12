@@ -1,6 +1,6 @@
 <?php
 // Chemin du dossier à afficher
-$dir = "/home/aroard/Bureau/webserv/upload/";
+$dir = "../upload/";
 
 // Ouvrir le dossier
 if (is_dir($dir)) {
@@ -40,9 +40,16 @@ if (is_dir($dir)) {
                             }
                             section {
                                 padding: 20px;
-                                text-align: center;
+                            }
+                            .file-container {
                                 display: flex;
-                                justify-content: center;
+                                justify-content: space-between;
+                                align-items: center;
+                                padding: 10px;
+                                background-color: white;
+                                margin-bottom: 10px;
+                                list-style-type: none;
+                            }
                             }
                             section img {
                                 max-width: 100%;
@@ -59,11 +66,17 @@ if (is_dir($dir)) {
                             .file-container span {
                                 font-weight: bold;
                                 margin-right: 10px;
+                                width: 60%;
                             }
-                            .file-container form {
+                            .file-info {
+                                display: flex;
+                                align-items: center;
+                                width: 40%;
+                            }
+                            .file-info form {
                                 margin: 0;
                             }
-                            .file-container input[type="submit"] {
+                            .file-info input[type="submit"] {
                                 background-color: #dc3545;
                                 color: white;
                                 border: none;
@@ -71,7 +84,7 @@ if (is_dir($dir)) {
                                 cursor: pointer;
                                 margin-right: 10px;
                             }
-                            .file-container a {
+                            .file-info a {
                                 background-color: #007bff;
                                 color: white;
                                 border: none;
@@ -79,7 +92,7 @@ if (is_dir($dir)) {
                                 cursor: pointer;
                                 text-decoration: none;
                             }
-                        </style>
+                    </style>
                     </head>
                     <body>
                         <header>
@@ -87,9 +100,10 @@ if (is_dir($dir)) {
                         </header>
                         <nav>
                             <a href="./index.html">Homepage</a>
-                            <a href="./aboutus.html">About us</a>
                             <a href="upload.html">Upload</a>
                             <a href="delete.php">My Files</a>
+                            <a href="./aboutus.html">About us</a>
+                            <a href="./test.php">Test</a>
                         </nav>
                         <section>';
         // Afficher le nom, le bouton de suppression et le bouton de téléchargement de chaque fichier
@@ -97,13 +111,17 @@ if (is_dir($dir)) {
             if ($file != "." && $file != "..") {
                 echo '<div class="file-container">';
                 echo '<span>' . $file . '</span>';
+                echo '<form action="' . urldecode($dir . $file) . '" method="post">';
+                echo '<button type="submit">Download</button>';
+                echo '</form>';
                 echo '<form method="POST" action="' . urldecode($dir . $file) . '">';
                 echo '<input type="hidden" name="Methode-http" value="DELETE">';
                 echo '<input type="submit" name="delete" value="Delete">';
                 echo '</form>';
-                echo '<a href="' . urldecode($dir . $file) . '" download="' . $file . '">Download</a>';
                 echo '</div>';
             }
         }
+        
     }
 }
+

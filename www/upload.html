@@ -2,7 +2,7 @@
 <html>
 
 <head>
-  <title>Upload and Delete File</title>
+  <title>Upload</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
@@ -96,31 +96,47 @@
 
 <body>
   <header>
-    <h1>Upload and Delete File</h1>
+    <h1>Upload</h1>
   </header>
   <nav>
-    <a href="./index.html">Homepage</a>
-    <a href="./aboutus.html">About us</a>
-	<a href="upload.html">Upload</a>
+		<a href="./index.html">Homepage</a>
+		<a href="upload.html">Upload</a>
+		<a href="delete.php">My Files</a>
+		<a href="./aboutus.html">About us</a>
+    <a href="./test.php">Test</a>
   </nav>
-  <section>
-    <form action="/upload" method="POST" enctype="multipart/form-data">
-      <label for="file">Choose a file to upload:</label>
-      <input type="file" id="file" name="file"><br><br>
-      <input type="submit" value="Upload">
+  <body>
+    <h1>Upload de fichier</h1>
+    <form action="upload.php" method="post" enctype="multipart/form-data">
+      <label for="file">Sélectionnez un fichier à uploader :</label>
+      <input type="file" name="file" id="file"><br><br>
+      <input type="submit" value="Uploader">
     </form>
-
-    <div id="delete-form" style="display:none;">
-      <form action="/delete" method="POST">
-        <label for="filename">Enter the filename to delete:</label>
-        <input type="text" id="filename" name="filename"><br><br>
-        <input type="submit" value="Delete">
-      </form>
-    </div>
-
+    <div id="message"></div>
     <script>
-      document.querySelector('form').addEventListener('submit', function(event) {
-        event.preventDefault();
-        const fileInput = document.querySelector('input[type="file"]');
-        if (fileInput.files.length > 0) {
-          document.querySelector('#delete-form').style.display =
+    document.querySelector('form').addEventListener('submit', function(event) {
+      event.preventDefault();
+      var fileInput = document.querySelector('#file');
+      if (!fileInput || !fileInput.value) {
+        alert('Veuillez sélectionner un fichier à uploader.');
+        return;
+      }
+      var xhr = new XMLHttpRequest();
+      xhr.open('POST', 'upload.php');
+      xhr.onload = function() {
+      if (xhr.status === 201) { // vérifie le statut de la réponse
+        document.querySelector('#message').innerHTML = '<span style="color:green;">Upload réussi !</span>';
+        setTimeout(function() {
+          document.querySelector('#message').innerHTML = '';
+        }, 2000);
+      } else {
+        alert('Une erreur est survenue !');
+      }
+      };
+      var formData = new FormData(document.querySelector('form'));
+      xhr.send(formData);
+    });
+    </script>
+  </body>
+
+
