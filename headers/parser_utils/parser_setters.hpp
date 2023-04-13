@@ -13,6 +13,7 @@ std::vector<std::pair<int, int> >							_limit_request;
 std::vector<std::pair<int, std::list<std::string> > >		_method_lists;
 std::vector<std::pair<int, std::string> >					_cgi_php;
 std::vector<std::pair<int, std::string> >					_file_save;
+std::vector<std::pair<int, int> >							_body_limit;
 
 
 std::pair<int, std::list<std::string> >	parse_template_set( std::string &tmp ) {
@@ -236,7 +237,17 @@ void	set_file_save( std::string &tmp ) {
 	_file_save.push_back(std::pair<int, std::string>(file_save.first, file_save.second.front()));
 	return ;
 }
-	
+
+void	set_body_limit( std::string &tmp ) {
+	std::pair<int, std::list<std::string> > body_limit = parse_template_set(tmp);
+	if (body_limit.second.size() != 1 || body_limit.second.front().find_first_not_of("0123456789") != -1) {
+		std::cerr << "Syntax error: " << __FUNCTION__
+			<< ": " << __LINE__ << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	_body_limit.push_back(std::pair<int, int>(body_limit.first, atoi(body_limit.second.front().c_str())));
+}
+
 void	set_comment_line( std::string &tmp ) {
 	_data_conf = _data_conf.substr(_data_conf.find_first_of(";"));
 	return ;

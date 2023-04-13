@@ -235,7 +235,8 @@ private:
 			case 8: if (_method_lists.size() < _nb_conf_serv) set_method_lists(tmp); else too_more_config_method("set_method_lists"); break ;
 			case 9: if (_cgi_php.size() < _nb_conf_serv) set_cgi_php(tmp); else too_more_config_method("set_cgi_php"); break ;
 			case 10: if (_file_save.size() < _nb_conf_serv) set_file_save(tmp); else too_more_config_method("set_file_save"); break ;
-			case 11: set_comment_line(tmp); break ;
+			case 11: if (_body_limit.size() < _nb_conf_serv) set_body_limit(tmp); else too_more_config_method("set_body_limit"); break ;
+			case 12: set_comment_line(tmp); break ;
 		}
 		return ;
 	}
@@ -318,6 +319,16 @@ private:
 		}
 		if (get_cgi_php(_nb_conf_serv - 1).empty())
 			_cgi_php.push_back(std::pair<int, std::string>(_nb_conf_serv, "./cgi_bin/php-cgi"));
+		if (get_file_save(_nb_conf_serv - 1).empty())
+			_file_save.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/upload/"));
+		if (_body_limit.empty())	
+			_body_limit.push_back(std::pair<int, int>(_nb_conf_serv, 1000000000));
+		else {			
+			if (get_body_limit(_nb_conf_serv - 1) < 0 || get_body_limit(_nb_conf_serv - 1) > 1000000000) {
+				std::cerr << "Error: Limit request must be between 1024-4096" << std::endl;
+				exit(1);
+			} 
+		}
 	}
 
 public:
@@ -349,6 +360,7 @@ std::ostream&	operator<<( std::ostream &o, const Parser &p) {
 			std::cout << "(" << *it << ")"; std::cout << std::endl; }
 		std::cout << "Cgi_php[" << i << "]\t\t: " << p.get_cgi_php(i) << std::endl;
 		std::cout << "File_save[" << i << "]\t\t: " << p.get_file_save(i) << std::endl;
+		std::cout << "Body_limit[" << i << "]\t\t: " << p.get_body_limit(i) << std::endl;
 		std::cout << "------------------------------------------" << std::endl;
 	}
 	return o;
