@@ -60,15 +60,53 @@ void	execute_cgi_php( std::string &path_php, std::string &msg ) {
 	}
 	close(fd_pipe[1]);
 		
-	char	tmp[256];
+	char	tmp[2048];
 	int		status;
 
-	std::memset(tmp, 0, 31);
+	std::memset(tmp, 0, 2047);
 	msg = "HTTP/1.1 200 OK\r\n";	
-	while (read(fd_pipe[0], tmp, 255) > 0) { 
+	while (read(fd_pipe[0], tmp, 2047) > 0) { 
 		msg += tmp;
-		std::memset(tmp, 0, 255); 
+		std::memset(tmp, 0, 2047); 
 	}
+	close(fd_pipe[0]);
+	waitpid(pid, &status, 0);
+	if (status != 0)
+		Error_exception::error(_parser.get_file_internal_server_error(), 500);
+	return ;
+}
+
+
+void	execute_cgi_python( std::string &path_php, std::string &msg ) {
+	int				fd_pipe[2];
+	pid_t			pid;
+	const char		*ag[3] = {_parser.get_cgi_py(0).c_str(), path_php.c_str(), NULL};
+
+	if (pipe(fd_pipe) == -1) { perror("ERROR pipe"); 
+		Error_exception::error(_parser.get_file_internal_server_error(), 500);
+	}
+	if ((pid = fork()) == -1) { perror("ERROR fork"); 
+		Error_exception::error(_parser.get_file_internal_server_error(), 500); 
+	}
+	if (!pid) {
+		if (dup2(fd_pipe[1], STDOUT_FILENO) == -1 || close(fd_pipe[1]) == -1 \
+			|| close(fd_pipe[0]) == -1) {
+			perror("ERROR dup2"); exit(EXIT_FAILURE);
+		}
+		execve(_parser.get_cgi_py(0).c_str(), const_cast<char**>(ag), NULL);
+		perror("ERROR execve"); exit(EXIT_FAILURE);
+	}
+	close(fd_pipe[1]);
+		
+	char	tmp[2048];
+	int		status;
+
+	std::memset(tmp, 0, 2047);
+	msg = "HTTP/1.1 200 OK\r\n\r\n";	
+	while (read(fd_pipe[0], tmp, 2047) > 0) { 
+		msg += tmp;
+		std::memset(tmp, 0, 2047); 
+	}										// RAJOUTER CONTENT-LENGHT ?
 	close(fd_pipe[0]);
 	waitpid(pid, &status, 0);
 	if (status != 0)
@@ -90,9 +128,11 @@ void	get_request_get( std::map<std::string, std::string> &request) {
 
 	open_files(web_page, path, msg);
 	if (path.size() > 4 \
-		&& !path.compare(path.size() - 4, path.size(), ".php")) {
+		&& !path.compare(path.size() - 4, 4, ".php"))
 		execute_cgi_php(path, msg);
-	}
+	else if (path.size() > 3 \
+		&& !path.compare(path.size() - 3, 3, ".py"))
+		execute_cgi_python(path, msg);
 	else {
 		msg = "HTTP/1.1 200 OK\r\nContent-Type: text/html; charset=UTF-8\r\n\r\n";
 		for (std::string line; std::getline(web_page, line);)

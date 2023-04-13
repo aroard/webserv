@@ -14,6 +14,7 @@ std::vector<std::pair<int, std::list<std::string> > >		get_method_lists( void ) 
 std::vector<std::pair<int, std::string> >					get_cgi_php( void ) { return (_cgi_php); }
 std::vector<std::pair<int, std::string> >					get_file_save( void ) { return (_file_save); }
 std::vector<std::pair<int, int> >							get_body_limit( void ) { return (_body_limit); }
+std::vector<std::pair<int, std::string> >					get_cgi_py( void ) { return (_cgi_py); }
 
 
 int							get_nb_conf_serv( void ) const { return (_nb_conf_serv); }
@@ -69,6 +70,11 @@ std::string					get_cgi_php( size_t num_conf ) const {
 }
 
 
+std::string					get_cgi_py( size_t num_conf ) const {
+	return (_cgi_py.empty() ? std::string() : num_conf < _cgi_py.back().first ? _cgi_py[num_conf].second : std::string());
+}
+
+
 std::string					get_file_save( size_t num_conf ) const {
 	return (_file_save.empty() ? std::string() : num_conf < _file_save.back().first ? _file_save[num_conf].second : std::string());
 }
@@ -76,6 +82,7 @@ std::string					get_file_save( size_t num_conf ) const {
 int							get_body_limit( size_t num_conf ) const {
 	return (_body_limit.empty() ? int() : num_conf < _body_limit.back().first ? _body_limit[num_conf].second : int());
 }
+
 
 std::string					get_file_created( void ) const { return (_file_created); }
 std::string					get_file_bad_request( void ) const { return (_file_bad_request); }

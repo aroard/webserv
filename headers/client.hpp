@@ -5,13 +5,15 @@
 class Client
 {
 private:
-	int		_socketClient;
-	Parser	&_parser;
+	std::map<std::string, std::string>	request;
+	int									_socketClient;
+	int									_port;
+	Parser								&_parser;
 
 	Client( void );
 
 public:
-	explicit Client(int socketServer, Parser &parser) : _parser(parser) {
+	explicit Client(int socketServer, int port, Parser &parser) : _port(port), _parser(parser) {
 		if ((_socketClient = accept(socketServer, NULL, NULL)) < 0) {
 			perror("ERRPR accept"); exit(EXIT_FAILURE);
 		}
@@ -21,14 +23,11 @@ public:
 		close (_socketClient);
 	}
 
-	void	run( void ) {
-		routine();
-	}
+	int		get_port( void ) const { return (_port); }
+	int		get_socket_client( void ) const { return (_socketClient); }
 
-private:
-
-	void	routine( void ) {
-		std::map<std::string, std::string> request;
+	bool	recv_request_http( void ) {
+		
 		std::string							msg;
 		char								*tmp = \
 				new char[_parser.get_limit_request(0) + 1];
@@ -36,40 +35,63 @@ private:
 		int									pos = -1;
 
 		std::memset(tmp, 0, _parser.get_limit_request(0));
-		while ((nb_octets = recv(_socketClient, tmp, _parser.get_limit_request(0), MSG_DONTWAIT)) != 0) {
-			if (nb_octets != -1) {
-				msg.insert(msg.size(), tmp, nb_octets);
-				pos = msg.find("Content-Length: ");
-				if (pos != -1) {
-					pos += 16;
-					pos = atoi(msg.substr(pos, (msg.substr(pos)).find_first_of("\r\n")).c_str());
-					nb_octets = msg.find("\r\n\r\n");
-					if (nb_octets != -1) pos += nb_octets + 4;
-					else pos = 1 << 30;
-				}
-				else if (msg.find("\r\n\r\n") != -1)
-					break ;
-				std::memset(tmp, 0, _parser.get_limit_request(0));
+		while ((nb_octets = recv(_socketClient, tmp, _parser.get_limit_request(0), 0)) != 0) {
+			if (nb_octets == -1) {
+				delete[] tmp;
+				return (false);
 			}
+			msg.insert(msg.size(), tmp, nb_octets);
+			pos = msg.find("Content-Length: ");
+			if (pos != -1) {
+				pos += 16;
+				pos = atoi(msg.substr(pos, (msg.substr(pos)).find_first_of("\r\n")).c_str());
+				nb_octets = msg.find("\r\n\r\n");
+				if (nb_octets != -1) pos += nb_octets + 4;
+				else pos = 1 << 30;
+			}
+			else if (msg.find("\r\n\r\n") != -1)
+				break ;
+			std::memset(tmp, 0, _parser.get_limit_request(0));
 			if (pos != -1 && msg.size() >= pos)
 				break ;
 		}
-		get_request_http(request, msg);/*
-		 std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
-		 for (std::map<std::string, std::string>::iterator it = request.begin();
-		 	it != request.end(); ++it) {
-		 	std::cout << "["; put_line(it->first); std::cout << "]";
-		 	std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
-		 }
-		 std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-		 std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
-		 put_line(msg);
-		 std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-		 std::cout << "msg:" << msg.size() << std::endl;*/
-		choose_methode_http(request);
+		get_request_http(request, msg);
+		// std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
+		// for (std::map<std::string, std::string>::iterator it = request.begin();
+		// 	it != request.end(); ++it) {
+		// 	std::cout << "["; put_line(it->first); std::cout << "]";
+		// 	std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
+		// }
+		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		// std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
+		// put_line(msg);
+		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		// std::cout << "msg:" << msg.size() << std::endl;
 		delete[] tmp;
+		return (true);
 	}
 
+	void	send_request_http( void ) {
+		try {
+			std::list<std::string>	ls = _parser.get_method_lists(0);
+			for (std::list<std::string>::iterator it = ls.begin();
+				it != ls.end(); ++it) {
+				if (request.count(*it)) {
+					if (request["Methode-http:"] == "GET") get_request_get(request);
+					else if (request["Methode-http:"] == "POST") get_request_post(request);
+					else if (request["Methode-http:"] == "DELETE") get_request_delete(request);
+					else ret_request_http(request, _parser.get_file_methode_not_allowed(), 405); 
+					return ;
+				}
+			}
+		} catch (const Error_exception &e) { 
+			ret_request_http(request, e.what().first, e.what().second); 
+		}
+		ret_request_http(request, _parser.get_file_methode_not_allowed(), 405); 
+		return ;
+	}
+
+private:
 
 	void	get_request_http( std::map<std::string, std::string> &request, const std::string &msg ) {		
 		std::stringstream	ss(msg);
@@ -97,26 +119,6 @@ private:
 				continue ;
 			request[line.substr(0, pos)] = line.substr(pos + 1, \
 				line.find("\r\n") - (pos + 1));
-		}
-		return ;
-	}
-
-
-	void	choose_methode_http( std::map<std::string, std::string> &request ) {
-		try {
-			std::list<std::string>	ls = _parser.get_method_lists(0);
-			for (std::list<std::string>::iterator it = ls.begin();
-				it != ls.end(); ++it) {
-				if (request.count(*it)) {
-					if (request["Methode-http:"] == "GET") get_request_get(request);
-					else if (request["Methode-http:"] == "POST") get_request_post(request);
-					else if (request["Methode-http:"] == "DELETE") get_request_delete(request, _parser.get_root(0));
-					else ret_request_http(request, _parser.get_file_methode_not_allowed(), 405); 
-					return ;
-				}
-			}
-		} catch (const Error_exception &e) { 
-			ret_request_http(request, e.what().first, e.what().second); 
 		}
 		return ;
 	}
@@ -215,28 +217,30 @@ private:
 				log_file << "\"\n";
 				log_file.close();
 			}
-		} catch ( const Error_exception &e) { 
-			ret_request_http(request, e.what().first, e.what().second); 
+		} catch ( const Error_exception &e ) {
+			std::cerr << e.what().first << std::cout;
 		}
 		return ;
 	}
 
 
 	std::string urldecode(const std::string& str) {
-		std::string decoded;
-		std::stringstream ss(str);
-		char c;
-		int value;
-		while (ss.get(c)) {
-			if (c == '+')
-				decoded += ' ';
-			else if (c == '%') {
-				if (ss >> std::hex >> value)
-					decoded += static_cast<char>(value);
-			} else
-				decoded += c;
+		std::string result;
+		char ch;
+		int i, hexCode;
+		for(i = 0; i < str.length(); i++) {
+			if(str[i] == '+')
+				result += ' ';
+			else if(str[i] == '%') {
+				sscanf(str.substr(i + 1, 2).c_str(), "%x", &hexCode);
+				ch = static_cast<char>(hexCode);
+				result += ch;
+				i += 2;
+			}
+			else
+				result += str[i];
 		}
-		return decoded;
+		return result;
 	}
 
 	# include "./request_http/request_get.hpp"

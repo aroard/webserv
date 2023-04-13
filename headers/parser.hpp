@@ -17,8 +17,14 @@ public:
 	explicit Parser(int argc, char **argv) : _nb_conf_serv(0) {
 		if (argc == 1)
 			_path_conf = "./conf/conf.conf";
-		else if (argc == 2)
+		else if (argc == 2) {
 			_path_conf = argv[1];
+			if (_path_conf.size() < 6 \
+				|| _path_conf.compare(_path_conf.size() - 5, 5, ".conf")) {
+				std::cerr << "Invalid extenssion (\".conf\") config file" << std::endl;
+				exit(EXIT_FAILURE);
+			}
+		}
 		else {
 			std::cerr << "Too many config file" << std::endl;
 			exit(EXIT_FAILURE);
@@ -31,9 +37,14 @@ public:
 		_file_conf.seekg(0, _file_conf.end);
 		int	length = _file_conf.tellg();
 		_file_conf.seekg(0, _file_conf.beg);
+		if (length == -1) {
+			std::cerr << "Invalid config file" << std::endl;
+			exit(EXIT_FAILURE);
+		}
 		char *buffer = new char[length];
 		_file_conf.read(buffer, length);
 		_data_conf = buffer;
+		delete buffer;
 		parse_all_file();
 		set_file_http();
 	}
@@ -62,7 +73,9 @@ public:
 		_limit_request = o._limit_request;
 		_method_lists = o._method_lists;
 		_cgi_php = o._cgi_php;
+		_cgi_py = o._cgi_py;
 		_file_save = o._file_save;
+		_body_limit = o._body_limit;
 		_file_created = o._file_created;
 		_file_bad_request = o._file_bad_request;
 		_file_unauthorized = o._file_unauthorized;
@@ -90,7 +103,9 @@ public:
 		new_parser._limit_request.push_back(std::pair<int, int>(1, get_limit_request(i)));
 		new_parser._method_lists.push_back(std::pair<int, std::list<std::string> >(1, get_method_lists(i)));
 		new_parser._cgi_php.push_back(std::pair<int, std::string>(1, get_cgi_php(i)));
+		new_parser._cgi_py.push_back(std::pair<int, std::string>(1, get_cgi_py(i)));
 		new_parser._file_save.push_back(std::pair<int, std::string>(1, get_file_save(i)));
+		new_parser._body_limit.push_back(std::pair<int, int>(1, get_body_limit(i)));
 		new_parser._file_created = _file_created;
 		new_parser._file_bad_request = _file_bad_request;
 		new_parser._file_unauthorized = _file_unauthorized;
@@ -125,23 +140,21 @@ private:
 	}
 
 	void	parse_all_file( void ) {
-		if (!_nb_conf_serv++)
-			parse_methode_server();
-		parse_config_methode();
+		++_nb_conf_serv;
 		if (parse_methode_server()) {
+			parse_config_methode();
 			parse_all_parameters();
 			parse_all_file();
 		}
 		else
-			parse_all_parameters();
-		return ;
+			--_nb_conf_serv;
 	}
 
 
 	bool	parse_methode_server( void ) {
 		int	pos = _data_conf.find("server");
 		if (pos == -1) {
-			if (_nb_conf_serv > 0)
+			if (_nb_conf_serv > 1)
 				return (false);
 			std::cerr << "No methode server in config file" 
 				<< __FUNCTION__ << ": " << __LINE__ << std::endl;
@@ -150,7 +163,7 @@ private:
 		_data_conf = _data_conf.substr(pos);
 		pos = _data_conf.find("{");
 		if (pos == -1 || pos != _data_conf.find_first_not_of("server ")) {
-			if (_nb_conf_serv > 0)
+			if (_nb_conf_serv > 1)
 				return (false);
 			std::cerr << "Syntax error: " << __FUNCTION__
 				<< ": " << __LINE__ << std::endl;
@@ -159,7 +172,7 @@ private:
 		_data_conf = _data_conf.substr(pos);
 		pos = _data_conf.find("}");
 		if (pos == -1) {
-			if (_nb_conf_serv > 0)
+			if (_nb_conf_serv > 1)
 				return (false);
 			std::cerr << "Syntax error: " << __FUNCTION__
 				<< ": " << __LINE__ << std::endl;
@@ -167,7 +180,7 @@ private:
 		}
 		_data_conf = _data_conf.substr(1);
 		if (_data_conf.substr(1, pos - 1).find_first_not_of(" \t\n\r") == std::string::npos) {
-			if (_nb_conf_serv > 0)
+			if (_nb_conf_serv > 1)
 				return (false);
 			std::cerr << "The config file server is empty" 
 				<< __FUNCTION__ << ": " << __LINE__ << std::endl;
@@ -182,19 +195,14 @@ private:
 		_data_conf = _data_conf.substr(pos);
 		pos = _data_conf.find_first_of(" \t");
 		if (pos == std::string::npos) {
-			if (_nb_conf_serv > 0)
+			if (_nb_conf_serv > 1)
 				return ;
 			std::cerr << "Syntax error: " << __FUNCTION__
 				<< ": " << __LINE__ << std::endl;
 			exit(EXIT_FAILURE);
 		}
 		std::string	tmp = _data_conf.substr(0, pos);
-		for (int i = 0;; ++i) {
-			if (g_config_methode[i].empty()) {
-				std::cerr << "Name methode in methode server invalid" 
-					<< __FUNCTION__ << ": " << __LINE__ << std::endl;
-				exit(EXIT_FAILURE);
-			}
+		for (int i = 0; !g_config_methode[i].empty(); ++i) {
 			if (!tmp.compare(g_config_methode[i])) {
 				set_config_methode(tmp, i); break ;
 			}
@@ -234,9 +242,10 @@ private:
 			case 7: if (_limit_request.size() < _nb_conf_serv) set_limit_request(tmp); else too_more_config_method("set_limit_request"); break ;
 			case 8: if (_method_lists.size() < _nb_conf_serv) set_method_lists(tmp); else too_more_config_method("set_method_lists"); break ;
 			case 9: if (_cgi_php.size() < _nb_conf_serv) set_cgi_php(tmp); else too_more_config_method("set_cgi_php"); break ;
-			case 10: if (_file_save.size() < _nb_conf_serv) set_file_save(tmp); else too_more_config_method("set_file_save"); break ;
-			case 11: if (_body_limit.size() < _nb_conf_serv) set_body_limit(tmp); else too_more_config_method("set_body_limit"); break ;
-			case 12: set_comment_line(tmp); break ;
+			case 10: if (_cgi_py.size() < _nb_conf_serv) set_cgi_py(tmp); else too_more_config_method("set_cgi_py"); break ;
+			case 11: if (_file_save.size() < _nb_conf_serv) set_file_save(tmp); else too_more_config_method("set_file_save"); break ;
+			case 12: if (_body_limit.size() < _nb_conf_serv) set_body_limit(tmp); else too_more_config_method("set_body_limit"); break ;
+			case 13: set_comment_line(tmp); break ;
 		}
 		return ;
 	}
@@ -269,8 +278,6 @@ private:
 			}
 		if (get_server_name(_nb_conf_serv - 1).empty()) 
 			_server_name.push_back(std::pair<int, std::string>(_nb_conf_serv, "dinopoulet.42.fr"));
-		// if (get_root(_nb_conf_serv - 1).empty())
-			// _root.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/"));
 		if (get_index(_nb_conf_serv - 1).empty()) {
 			std::list<std::string> empty_list;
 			empty_list.push_back("index.html");
@@ -285,11 +292,11 @@ private:
 				std::pair<std::string, int>("./logs/access.log", count_line_in_file("./logs/access.log"))));
 		if (get_error_page(_nb_conf_serv - 1).empty())
 			_error_page.push_back(std::pair<int, std::string>(_nb_conf_serv, "./tools/not_found.html"));
-		if (_limit_request.empty())	
-			_limit_request.push_back(std::pair<int, int>(_nb_conf_serv, 1024));
+		if (!get_limit_request(_nb_conf_serv - 1))	
+			_limit_request.push_back(std::pair<int, int>(_nb_conf_serv, 4096));
 		else {			
 			if (get_limit_request(_nb_conf_serv - 1) < 1024 || get_limit_request(_nb_conf_serv - 1) > 102400) {
-				std::cerr << "Error: Limit request must be between 1024-4096" << std::endl;
+				std::cerr << "Error: Limit request must be between 1024-102400" << std::endl;
 				exit(1);
 			} 
 		}
@@ -319,17 +326,16 @@ private:
 		}
 		if (get_cgi_php(_nb_conf_serv - 1).empty())
 			_cgi_php.push_back(std::pair<int, std::string>(_nb_conf_serv, "./cgi_bin/php-cgi"));
-		if (get_file_save(_nb_conf_serv - 1).empty())
-			_file_save.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/upload/"));
-		if (_body_limit.empty())	
-			_body_limit.push_back(std::pair<int, int>(_nb_conf_serv, 1000000000));
-		else {			
-			if (get_body_limit(_nb_conf_serv - 1) < 0 || get_body_limit(_nb_conf_serv - 1) > 1000000000) {
-				std::cerr << "Error: Limit request must be between 1024-4096" << std::endl;
-				exit(1);
-			} 
-		}
+
+		if (get_cgi_py(_nb_conf_serv - 1).empty())
+			_cgi_py.push_back(std::pair<int, std::string>(_nb_conf_serv, "./cgi_bin/python3.7"));		if (get_file_save(_nb_conf_serv - 1).empty())
+			_file_save.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/upload/"));		
+		if (get_body_limit(_nb_conf_serv - 1) > 1000000000) {
+			std::cerr << "Error: Limit request must be between 1024-4096" << std::endl;
+			exit(1);
+		} 
 	}
+	
 
 public:
 
@@ -359,6 +365,7 @@ std::ostream&	operator<<( std::ostream &o, const Parser &p) {
 		for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it)
 			std::cout << "(" << *it << ")"; std::cout << std::endl; }
 		std::cout << "Cgi_php[" << i << "]\t\t: " << p.get_cgi_php(i) << std::endl;
+		std::cout << "Cgi_py[" << i << "]\t\t: " << p.get_cgi_py(i) << std::endl;
 		std::cout << "File_save[" << i << "]\t\t: " << p.get_file_save(i) << std::endl;
 		std::cout << "Body_limit[" << i << "]\t\t: " << p.get_body_limit(i) << std::endl;
 		std::cout << "------------------------------------------" << std::endl;

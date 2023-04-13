@@ -65,7 +65,8 @@ const std::string	g_month[] = {	"Jan", "Feb", "Mar", "Apr", \
 const std::string	g_config_methode[] = {	"listen", "server_name", "root", \
 											"index", "error_log", "access_log", \
 											"error_page", "limit_request", \
-											"method_lists", "cgi_php", "file_save", "body_limit", "#", ""};
+											"method_lists", "cgi_php", "cgi_py", \
+											"file_save", "body_limit", "#", ""};
 
 	void	put_line( std::string line ) {
 		for (std::string::iterator it = line.begin();

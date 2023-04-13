@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 
 	Server	serv(parser[0]);
 
-	//serv.start();
+	serv.start();
 
 	return (0);
 }

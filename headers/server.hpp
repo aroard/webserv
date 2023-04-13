@@ -4,32 +4,39 @@
 
 class Server
 {
-	typedef	struct sockaddr_in	sockaddr_in;
+
 private:
-	sockaddr_in		_confServer;
-	std::list<int>	_socketServer;
-	int				_socketClient;
-	Parser			_parser;
+	std::vector<int>	_port;
+	std::list<int>		_socketServer;
+	int					_socketClient;
+	Parser				_parser;
 
 public:
 
 	explicit Server ( Parser parser = Parser(1, NULL) ) \
 		: _parser(parser) {
 
-		std::list<int>	ls = _parser.get_port(0);
-		int				socketServer;
+		struct sockaddr_in	confServer;
+		std::list<int>		ls = _parser.get_port(0);
+		int					socketServer;
 
 		for (std::list<int>::iterator it = ls.begin(); it != ls.end(); ++it) {
 
 			if ((socketServer = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 				perror("ERROR socket"); exit(EXIT_FAILURE);
 			}
-			_confServer.sin_addr.s_addr = INADDR_ANY;
-			_confServer.sin_family = AF_INET;
-			_confServer.sin_port = htons(*it);
 
-			if (bind(socketServer, (const struct sockaddr *)&_confServer, \
-					sizeof(_confServer)) < 0) {
+			int optval = 1;
+        	setsockopt(socketServer, SOL_SOCKET, SO_REUSEADDR, &optval, sizeof(optval));
+
+			confServer.sin_addr.s_addr = htonl(INADDR_ANY);
+			confServer.sin_family = AF_INET;
+			confServer.sin_port = htons(*it);
+
+			_port.push_back(*it);
+
+			if (bind(socketServer, (const struct sockaddr *)&confServer, \
+					sizeof(confServer)) < 0) {
 				perror("ERROR bind"); exit (EXIT_FAILURE);
 			}
 
@@ -60,47 +67,90 @@ private:
 
 	void	routine_server( void ) {
 		std::cout << "Server is starting" << std::endl;
-		int kq = kqueue();
+		std::list<int>::iterator	it = _socketServer.begin();
+		std::list<int>::iterator	ite = _socketServer.end();
+		int							nsocket = _socketServer.size();
+		int 						kq = kqueue();
+		int							i = 0;
+		
 		if (kq < 0) {
 			perror("ERROR kqueue"); exit(EXIT_FAILURE);
 		}
 
-		struct kevent 	*ev_set = new struct kevent[_socketServer.size()];
-		int				i = 0;
-		for (std::list<int>::iterator it = _socketServer.begin(); \
-			it != _socketServer.end(); ++it, ++i)
-			EV_SET(&ev_set[i], *it, EVFILT_READ, EV_ADD, \
-				0, 0, 0);
-		if (kevent(kq, ev_set, _socketServer.size(), NULL, 0, NULL) < 0) {
-			perror("ERROR kevent set"); exit(EXIT_FAILURE);
-		}
+		struct kevent 				*ev_set = new struct kevent[nsocket];
+		struct kevent				*ev_get = new struct kevent[nsocket];
+		Client						**cl = new Client*[nsocket];
+		std::map<int, int>			mp;
 
-		delete[] ev_set;
-
-		struct kevent	*ev_get = new struct kevent[_socketServer.size()];
-		int				nfds;
+		 
+		for (; it != ite; ++it, ++i)
+			EV_SET(&ev_set[i], *it, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, 0);
 
 		signal(SIGINT, Error_exception::interruption_server);
 		try {
-			while (true) {
-				if ((nfds = kevent(kq, NULL, 0, ev_get, _socketServer.size(), \
-					NULL)) < 0) {
-					perror("ERROR kevent get"); exit(EXIT_FAILURE);
+			for (int nfds;;) {
+				if ((nfds = kevent(kq, ev_set, nsocket, ev_get, nsocket, NULL)) < 0) {
+					perror("ERROR kevent"); exit(EXIT_FAILURE);
 				}
-				for (i = 0; i < nfds; ++i) {
-					if (ev_get[i].filter == EVFILT_READ) {
-						Client	cl(ev_get[i].ident, _parser);
-						cl.run();
+				for (int nevset, i = 0; i < nfds; ++i) {
+					nevset = 0;
+					for (it = _socketServer.begin(); it != ite; ++it, ++nevset) {
+						if (ev_get[i].ident == *it) {
+							for (int x = 0; x < nsocket; ++x, ++it) {
+								if (x == nevset) {
+									cl[nevset] = new Client(ev_get[i].ident, _port[nevset], _parser);
+									mp.insert(std::pair<int, int>(cl[nevset]->get_socket_client(), nevset));
+									EV_SET(&ev_set[nevset], cl[nevset]->get_socket_client(), EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, 0);
+								}
+								else
+									EV_SET(&ev_set[x], ev_set[x].ident, EVFILT_READ, EV_DISABLE, 0, 0, 0);
+							}
+							break ;
+						}
+					}
+					if (ev_get[i].filter == EVFILT_READ && nevset == nsocket) {
+						if (!cl[mp[ev_get[i].ident]]->recv_request_http()) {
+							it = _socketServer.begin();
+							for (int x = 0; x < nsocket; ++x, ++it) {
+								if (x == mp[ev_get[i].ident]) {
+									cl[mp[ev_get[i].ident]]->send_request_http();
+									EV_SET(&ev_set[mp[ev_get[i].ident]], *it, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, 0);
+								}
+								else if (!mp.count(ev_set[x].ident))
+									EV_SET(&ev_set[x], *it, EVFILT_READ, EV_ENABLE | EV_ONESHOT, 0, 0, 0);
+							}
+							delete cl[mp[ev_get[i].ident]];
+							mp.erase(ev_get[i].ident);
+						}
+						else
+							EV_SET(&ev_set[mp[ev_get[i].ident]], ev_get[i].ident, EVFILT_WRITE, EV_ADD | EV_ONESHOT, 0, 0, 0);
+					}
+					else if (ev_get[i].filter == EVFILT_WRITE && nevset == nsocket) {
+						it = _socketServer.begin();
+						for (int x = 0; x < nsocket; ++x, ++it) {
+							
+							if (x == mp[ev_get[i].ident]) {
+								cl[mp[ev_get[i].ident]]->send_request_http();
+								EV_SET(&ev_set[mp[ev_get[i].ident]], *it, EVFILT_READ, EV_ADD | EV_ONESHOT, 0, 0, 0);
+							}
+							else
+								EV_SET(&ev_set[x], *it, EVFILT_READ, EV_ENABLE | EV_ONESHOT, 0, 0, 0);
+						}
+						delete cl[mp[ev_get[i].ident]];
+						mp.erase(ev_get[i].ident);
 					}
 				}
 			}
 		} catch ( ... ) {}
 		std::cout << "\rServer is down" << std::endl;
 		signal(SIGINT, SIG_DFL);
-		delete[] ev_get;
+		delete 		ev_set;
+		delete 		ev_get;
+		delete[]	cl;
 	}
 
 };
+
 
 // 172.20.0.1 - - [31/Mar/2023:15:22:58 +0000] "GET /index.html/d HTTP/2.0" \
 // 404 132 "-" "Mozilla/5.0 (X11; Linux x86_64; rv:102.0) Gecko/20100101 Firefox/102.0"

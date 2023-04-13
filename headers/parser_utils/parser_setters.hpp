@@ -12,6 +12,7 @@ std::vector<std::pair<int, std::string> >					_error_page;
 std::vector<std::pair<int, int> >							_limit_request;
 std::vector<std::pair<int, std::list<std::string> > >		_method_lists;
 std::vector<std::pair<int, std::string> >					_cgi_php;
+std::vector<std::pair<int, std::string> >					_cgi_py;
 std::vector<std::pair<int, std::string> >					_file_save;
 std::vector<std::pair<int, int> >							_body_limit;
 
@@ -23,10 +24,17 @@ std::pair<int, std::list<std::string> >	parse_template_set( std::string &tmp ) {
 			<< ": " << __LINE__ << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	std::stringstream			ss(_data_conf.substr(tmp.size() + 1, pos - 1));
-	std::list<std::string>		ls;
+	std::string				data = _data_conf.substr(tmp.size() + 1, pos);
+	std::list<std::string>	ls;
 
-	for (std::string line; std::getline(ss, line, ' '); ls.push_back(line));
+	for (int start;;) {
+		start = data.find_first_not_of(" \t\r\n;");
+		pos = data.find_first_of(" \t\r\n;", start) - start;
+		if (pos < 0 || start < 0)
+			break ;
+		ls.push_back(data.substr(start, pos));
+		data = data.substr(pos + start + 1);
+	}
 	return (std::pair<int, std::list<std::string> >(_nb_conf_serv, ls));
 }
 
@@ -172,8 +180,6 @@ void	set_error_page( std::string &tmp ) {
 			<< ": " << __LINE__ << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	if (error_page.second.front() != "./www/error_pages/NotFound.html"){
-		std::cout << "Wrong path for error_page" << std::endl; exit(EXIT_FAILURE);}
 	if(!parse_files(error_page.second.front()))
 		exit(EXIT_FAILURE);
 	_error_page.push_back(std::pair<int, std::string>(error_page.first, error_page.second.front()));
@@ -205,11 +211,23 @@ void	set_cgi_php( std::string &tmp ) {
 			<< ": " << __LINE__ << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	if (cgi_php.second.front() != "./cgi_bin/php-cgi"){
-		std::cout << "Wrong path for cgi_php" << std::endl; exit(EXIT_FAILURE);}
 	if (!parse_files(cgi_php.second.front()))
 		exit(EXIT_FAILURE);
 	_cgi_php.push_back(std::pair<int, std::string>(cgi_php.first, cgi_php.second.front()));
+	return ;
+}
+
+
+void	set_cgi_py( std::string &tmp ) {
+	std::pair<int, std::list<std::string> > cgi_py = parse_template_set(tmp);
+	if (cgi_py.second.size() != 1) {
+		std::cerr << "Syntax error: " << __FUNCTION__
+			<< ": " << __LINE__ << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (!parse_files(cgi_py.second.front()))
+		exit(EXIT_FAILURE);
+	_cgi_py.push_back(std::pair<int, std::string>(cgi_py.first, cgi_py.second.front()));
 	return ;
 }
 	
@@ -300,7 +318,6 @@ void	set_file_http( void ) {
 			+ buffer + "\r\n\r\n" + data_file;
 		}
 		else {
-			// std::cout << "[[[" << path_file[i] << "]]]" << std::endl;
 			data_file += "Content-Type: text/html\r\nContent-Length: 57\r\n\r\n\
 <html><body>Internal file loading error</body></html>\r\n";
 		}
