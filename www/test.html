@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Liste des fichiers</title>
+  </head>
+  <body>
+    <h1>Liste des fichiers dans le dossier</h1>
+    <ul>
+      <!-- Utilisation de PHP pour récupérer la liste des fichiers -->
+      <?php
+        // Chemin du dossier à afficher
+        $dir = '../upload/';
+
+        // Liste des fichiers dans le dossier
+        $files = scandir($dir);
+
+        // Parcours de la liste des fichiers
+        foreach($files as $file) {
+          // Vérification que le fichier est un fichier (et non un dossier)
+          if(is_file($dir.$file)) {
+            // Affichage du nom du fichier avec un lien pour le télécharger
+            echo '<li><a href="'.$dir.$file.'" download>'.$file.'</a></li>';
+          }
+        }
+      ?>
+    </ul>
+  </body>
+</html>

@@ -12,6 +12,7 @@ std::vector<std::pair<int, std::string> >					get_error_page( void ) { return (_
 std::vector<std::pair<int, int> >							get_limit_request( void ) { return (_limit_request); }
 std::vector<std::pair<int, std::list<std::string> > >		get_method_lists( void ) { return (_method_lists); }
 std::vector<std::pair<int, std::string> >					get_cgi_php( void ) { return (_cgi_php); }
+std::vector<std::pair<int, std::string> >					get_file_save( void ) { return (_file_save); }
 
 
 int							get_nb_conf_serv( void ) const { return (_nb_conf_serv); }
@@ -64,6 +65,11 @@ std::list<std::string>		get_method_lists( size_t num_conf ) const {
 
 std::string					get_cgi_php( size_t num_conf ) const {
 	return (_cgi_php.empty() ? std::string() : num_conf < _cgi_php.back().first ? _cgi_php[num_conf].second : std::string());
+}
+
+
+std::string					get_file_save( size_t num_conf ) const {
+	return (_file_save.empty() ? std::string() : num_conf < _file_save.back().first ? _file_save[num_conf].second : std::string());
 }
 
 

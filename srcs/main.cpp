@@ -5,11 +5,11 @@ int main(int argc, char **argv)
 {
 	Parser	parser(argc, argv);
 
-	std::cout << parser << std::endl;
+	//std::cout << parser << std::endl;
 
 	Server	serv(parser[0]);
 
-	serv.start();
+	//serv.start();
 
 	return (0);
 }

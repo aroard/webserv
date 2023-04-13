@@ -54,18 +54,18 @@ private:
 			if (pos != -1 && msg.size() >= pos)
 				break ;
 		}
-		get_request_http(request, msg);
-		// std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
-		// for (std::map<std::string, std::string>::iterator it = request.begin();
-		// 	it != request.end(); ++it) {
-		// 	std::cout << "["; put_line(it->first); std::cout << "]";
-		// 	std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
-		// }
-		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-		// std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
-		// put_line(msg);
-		// std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
-		// std::cout << "msg:" << msg.size() << std::endl;
+		get_request_http(request, msg);/*
+		 std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
+		 for (std::map<std::string, std::string>::iterator it = request.begin();
+		 	it != request.end(); ++it) {
+		 	std::cout << "["; put_line(it->first); std::cout << "]";
+		 	std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
+		 }
+		 std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		 std::cout << "\033[32m████████████████ MSG ████████████████\033[0m" << std::endl;
+		 put_line(msg);
+		 std::cout << "\033[32m█████████████████████████████████████████\033[0m" << std::endl;
+		 std::cout << "msg:" << msg.size() << std::endl;*/
 		choose_methode_http(request);
 		delete[] tmp;
 	}
@@ -110,7 +110,7 @@ private:
 				if (request.count(*it)) {
 					if (request["Methode-http:"] == "GET") get_request_get(request);
 					else if (request["Methode-http:"] == "POST") get_request_post(request);
-					else if (request["Methode-http:"] == "DELETE") get_request_delete(request);
+					else if (request["Methode-http:"] == "DELETE") get_request_delete(request, _parser.get_root(0));
 					else ret_request_http(request, _parser.get_file_methode_not_allowed(), 405); 
 					return ;
 				}

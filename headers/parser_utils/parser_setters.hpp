@@ -12,6 +12,7 @@ std::vector<std::pair<int, std::string> >					_error_page;
 std::vector<std::pair<int, int> >							_limit_request;
 std::vector<std::pair<int, std::list<std::string> > >		_method_lists;
 std::vector<std::pair<int, std::string> >					_cgi_php;
+std::vector<std::pair<int, std::string> >					_file_save;
 
 
 std::pair<int, std::list<std::string> >	parse_template_set( std::string &tmp ) {
@@ -210,7 +211,31 @@ void	set_cgi_php( std::string &tmp ) {
 	_cgi_php.push_back(std::pair<int, std::string>(cgi_php.first, cgi_php.second.front()));
 	return ;
 }
+	
+void	set_file_save( std::string &tmp ) {
+	std::ifstream check_folder;
+	std::pair<int, std::list<std::string> > file_save = parse_template_set(tmp);
+	if (file_save.second.size() != 1) {
+		std::cerr << "Syntax error: " << __FUNCTION__
+			<< ": " << __LINE__ << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (file_save.second.front().substr(file_save.second.front().length() - 1) != "/")
+		file_save.second.front() = file_save.second.front() + "/";
 
+	if (access(file_save.second.front().c_str(), F_OK) != 0)
+	{
+		std::cerr << "Error: Path of file_save is wrong" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (access(file_save.second.front().c_str(), R_OK | X_OK) != 0)
+	{
+		std::cerr << "Error: Path of has the wrong right" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	_file_save.push_back(std::pair<int, std::string>(file_save.first, file_save.second.front()));
+	return ;
+}
 	
 void	set_comment_line( std::string &tmp ) {
 	_data_conf = _data_conf.substr(_data_conf.find_first_of(";"));

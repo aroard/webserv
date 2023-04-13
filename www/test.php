@@ -1,35 +1,39 @@
 <?php
-    // Répertoire contenant les fichiers à télécharger
-    $directory = "../upload/";
-    
-    // Liste tous les fichiers dans le répertoire
-    $files = array_diff(scandir($directory), array('.', '..'));
-    
-    // Parcourt tous les fichiers et affiche des liens de téléchargement
-    foreach ($files as $file) {
-        echo '<div class="file-container">';
-        echo '<span>' . $file . '</span>';
-        echo '<a href="download.php?file=' . urlencode($directory . $file) . '"><button>Télécharger</button></a>';
-        echo '</div>';
+// Nom du dossier à afficher
+$dir = '../upload/';
+
+// Vérification que le dossier existe
+if(is_dir($dir)) {
+
+  // Ouverture du dossier
+  if($dh = opendir($dir)) {
+
+    // Parcours des fichiers du dossier
+    while(($file = readdir($dh)) !== false) {
+      // Vérification que le fichier est un fichier (et non un dossier)
+      if(is_file($dir.$file)) {
+        // Affichage du nom du fichier avec un lien pour le télécharger
+        echo '<a href="?file='.$file.'">'.$file.'</a><br>';
+      }
     }
+
+    // Fermeture du dossier
+    closedir($dh);
+  }
+}
+
+// Vérification que le paramètre "file" est présent dans l'URL
+if(isset($_GET['file'])) {
+  // Récupération du nom du fichier depuis l'URL
+  $file = $_GET['file'];
+
+  // Vérification que le fichier existe
+  if(file_exists($dir.$file)) {
+    // Envoi du fichier au navigateur
+    header('Content-Type: application/octet-stream');
+    header('Content-Disposition: attachment; filename="'.$file.'"');
+    readfile($dir.$file);
+    exit;
+  }
+}
 ?>
-
-<!-- Le code HTML pour le dialogue de sélection de fichier -->
-<div id="file-dialog" style="display: none;">
-    <input type="file" id="file-input">
-</div>
-
-<script>
-    // Fonction pour afficher le dialogue de sélection de fichier
-    function showFileDialog() {
-        var fileInput = document.getElementById("file-input");
-        fileInput.addEventListener("change", function() {
-            var files = fileInput.files;
-            if (files.length > 0) {
-                var file = files[0];
-                window.location.href = "download.php?file=" + encodeURIComponent(file.path);
-            }
-        });
-        fileInput.click();
-    }
-</script>

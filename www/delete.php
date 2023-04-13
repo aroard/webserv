@@ -1,6 +1,6 @@
 <?php
 // Chemin du dossier à afficher
-$dir = "../upload/";
+$dir = "./upload/";
 
 // Ouvrir le dossier
 if (is_dir($dir)) {
@@ -111,12 +111,12 @@ if (is_dir($dir)) {
             if ($file != "." && $file != "..") {
                 echo '<div class="file-container">';
                 echo '<span>' . $file . '</span>';
-                echo '<form action="' . urldecode($dir . $file) . '" method="post">';
-                echo '<button type="submit">Download</button>';
-                echo '</form>';
                 echo '<form method="POST" action="' . urldecode($dir . $file) . '">';
                 echo '<input type="hidden" name="Methode-http" value="DELETE">';
                 echo '<input type="submit" name="delete" value="Delete">';
+                echo '</form>';
+                echo '<form method="GET" action="' . urldecode($dir . $file) . '">';
+                echo '<button type="submit">Download</button>';
                 echo '</form>';
                 echo '</div>';
             }

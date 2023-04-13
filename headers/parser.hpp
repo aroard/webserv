@@ -62,6 +62,7 @@ public:
 		_limit_request = o._limit_request;
 		_method_lists = o._method_lists;
 		_cgi_php = o._cgi_php;
+		_file_save = o._file_save;
 		_file_created = o._file_created;
 		_file_bad_request = o._file_bad_request;
 		_file_unauthorized = o._file_unauthorized;
@@ -89,6 +90,7 @@ public:
 		new_parser._limit_request.push_back(std::pair<int, int>(1, get_limit_request(i)));
 		new_parser._method_lists.push_back(std::pair<int, std::list<std::string> >(1, get_method_lists(i)));
 		new_parser._cgi_php.push_back(std::pair<int, std::string>(1, get_cgi_php(i)));
+		new_parser._file_save.push_back(std::pair<int, std::string>(1, get_file_save(i)));
 		new_parser._file_created = _file_created;
 		new_parser._file_bad_request = _file_bad_request;
 		new_parser._file_unauthorized = _file_unauthorized;
@@ -232,7 +234,8 @@ private:
 			case 7: if (_limit_request.size() < _nb_conf_serv) set_limit_request(tmp); else too_more_config_method("set_limit_request"); break ;
 			case 8: if (_method_lists.size() < _nb_conf_serv) set_method_lists(tmp); else too_more_config_method("set_method_lists"); break ;
 			case 9: if (_cgi_php.size() < _nb_conf_serv) set_cgi_php(tmp); else too_more_config_method("set_cgi_php"); break ;
-			case 10: set_comment_line(tmp); break ;
+			case 10: if (_file_save.size() < _nb_conf_serv) set_file_save(tmp); else too_more_config_method("set_file_save"); break ;
+			case 11: set_comment_line(tmp); break ;
 		}
 		return ;
 	}
@@ -345,6 +348,7 @@ std::ostream&	operator<<( std::ostream &o, const Parser &p) {
 		for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it)
 			std::cout << "(" << *it << ")"; std::cout << std::endl; }
 		std::cout << "Cgi_php[" << i << "]\t\t: " << p.get_cgi_php(i) << std::endl;
+		std::cout << "File_save[" << i << "]\t\t: " << p.get_file_save(i) << std::endl;
 		std::cout << "------------------------------------------" << std::endl;
 	}
 	return o;
