@@ -25,7 +25,7 @@ void	set_request_post_data( const std::string &host,
 	std::string 	filename = tmp.substr(pos, tmp.find_first_of("\"\r\n", pos) - pos);
 	if (!host.empty())
 		filename = host + '_' + filename;
-	std::ofstream	img(("./www/upload/" + filename).c_str(), std::ios::out | std::ofstream::binary);
+	std::ofstream	img(( _parser.get_file_save(0) + filename).c_str(), std::ios::out | std::ofstream::binary);
 	if (img.is_open() == false)
 		Error_exception::error(_parser.get_file_internal_server_error(), 500);
 	pos = tmp.find("\r\n\r\n") + 4;

@@ -1,8 +1,6 @@
 <?php
-// Chemin du dossier à afficher
 $dir = "./upload/";
 
-// Ouvrir le dossier
 if (is_dir($dir)) {
     if ($dh = opendir($dir)) {
         echo '<!DOCTYPE html>
@@ -106,7 +104,6 @@ if (is_dir($dir)) {
                             <a href="./test.php">Test</a>
                         </nav>
                         <section>';
-        // Afficher le nom, le bouton de suppression et le bouton de téléchargement de chaque fichier
         while (($file = readdir($dh)) !== false) {
             if ($file != "." && $file != "..") {
                 echo '<div class="file-container">';
@@ -124,4 +121,3 @@ if (is_dir($dir)) {
         
     }
 }
-

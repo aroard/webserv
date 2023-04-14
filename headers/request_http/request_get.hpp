@@ -114,6 +114,40 @@ void	execute_cgi_python( std::string &path_php, std::string &msg ) {
 	return ;
 }
 
+void	create_copy(std::string path, std::string name)
+{
+	std::string		msg;
+	std::string		file = _parser.get_file_save(0);
+	std::ifstream	ifs(("./tools/template/" + name).c_str());
+	std::ofstream	copy(path.c_str());
+
+	if (!ifs || !copy)
+	{
+		if(!ifs && !copy){
+			copy.close();
+			ifs.close();
+		}
+		else{
+			if(!ifs)
+				copy.close();
+			if(!copy)
+				ifs.close();
+		}
+		return;
+	}
+	if (file.find("www/") != std::string::npos)		
+			file.replace(file.find("/www/"), 5, "/");
+	while(std::getline(ifs, msg, '\r')){
+		if (msg.find("FILE_SAVE") != std::string::npos)
+			msg.replace(msg.find("FILE_SAVE"), 9, file);
+		msg + '\r';
+		copy << msg;
+	}
+
+	copy.close();
+	ifs.close();
+	return;
+}
 
 void	get_request_get( std::map<std::string, std::string> &request) {
 	std::ifstream	web_page;
@@ -125,7 +159,8 @@ void	get_request_get( std::map<std::string, std::string> &request) {
 		path.erase(path.size() - 1);
 	path += request["GET"].substr(0, request["GET"].find_first_of(' '));
 	path = urldecode(path);
-
+	if (path == "./www/delete.php")
+		create_copy(path, "delete.php");
 	open_files(web_page, path, msg);
 	if (path.size() > 4 \
 		&& !path.compare(path.size() - 4, 4, ".php"))

@@ -54,7 +54,9 @@ public:
 			std::memset(tmp, 0, _parser.get_limit_request(0));
 			if (pos != -1 && msg.size() >= pos)
 				break ;
-		}
+		}		
+		if (msg.size() > _parser.get_body_limit(0) && _parser.get_body_limit(0) != 0)
+			return false;
 		get_request_http(request, msg);
 		// std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
 		// for (std::map<std::string, std::string>::iterator it = request.begin();
