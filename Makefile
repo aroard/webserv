@@ -2,6 +2,7 @@ CC = c++
 
 CFLAGS = -I/usr/include/kqueue/ \
 		 -std=c++98 #-Wall -Werror -Wextra
+
 IFLAGS = -L/usr/local/lib -lkqueue
 
 OBJ_DIR = obj/

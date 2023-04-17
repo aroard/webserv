@@ -8,13 +8,13 @@ private:
 	std::string		_path_conf;
 	std::ifstream	_file_conf;
 	std::string		_data_conf;
-	int				_nb_conf_serv;
+	size_t			_nb_conf_serv;
 
 public:
 
 	explicit Parser( void ) : _nb_conf_serv(0) {}
 
-	explicit Parser(int argc, char **argv) : _nb_conf_serv(0) {
+	explicit Parser(const int argc, char ** const argv) : _nb_conf_serv(0) {
 		if (argc == 1)
 			_path_conf = "./conf/conf.conf";
 		else if (argc == 2) {
@@ -35,7 +35,7 @@ public:
 			exit(EXIT_FAILURE);
 		}
 		_file_conf.seekg(0, _file_conf.end);
-		int	length = _file_conf.tellg();
+		const int	length = _file_conf.tellg();
 		_file_conf.seekg(0, _file_conf.beg);
 		if (length == -1) {
 			std::cerr << "Invalid config file" << std::endl;
@@ -44,7 +44,7 @@ public:
 		char *buffer = new char[length];
 		_file_conf.read(buffer, length);
 		_data_conf = buffer;
-		delete buffer;
+		delete[] buffer;
 		parse_all_file();
 		set_file_http();
 	}
@@ -87,25 +87,25 @@ public:
 	}
 
 
-	Parser	operator[]( size_t i ) {
+	Parser	operator[]( const size_t i ) {
 		Parser	new_parser;
 
 		if (i >= _nb_conf_serv)
 			return (new_parser);
 		new_parser._nb_conf_serv = 1;
-		new_parser._port.push_back(std::pair<int, std::list<int> >(1, get_port(i)));
-		new_parser._server_name.push_back(std::pair<int, std::string>(1, get_server_name(i)));
-		new_parser._root.push_back(std::pair<int, std::string>(1, get_root(i)));
-		new_parser._index.push_back(std::pair<int, std::list<std::string> >(1, get_index(i)));
-		new_parser._error_log.push_back(std::pair<int, std::pair<std::string, int> >(1, get_error_log(i)));
-		new_parser._access_log.push_back(std::pair<int, std::pair<std::string, int> >(1, get_access_log(i)));
-		new_parser._error_page.push_back(std::pair<int, std::string>(1, get_error_page(i)));
-		new_parser._limit_request.push_back(std::pair<int, int>(1, get_limit_request(i)));
-		new_parser._method_lists.push_back(std::pair<int, std::list<std::string> >(1, get_method_lists(i)));
-		new_parser._cgi_php.push_back(std::pair<int, std::string>(1, get_cgi_php(i)));
-		new_parser._cgi_py.push_back(std::pair<int, std::string>(1, get_cgi_py(i)));
-		new_parser._file_save.push_back(std::pair<int, std::string>(1, get_file_save(i)));
-		new_parser._body_limit.push_back(std::pair<int, int>(1, get_body_limit(i)));
+		new_parser._port.push_back(std::pair<size_t, std::list<size_t> >(1, get_port(i)));
+		new_parser._server_name.push_back(std::pair<size_t, std::string>(1, get_server_name(i)));
+		new_parser._root.push_back(std::pair<size_t, std::string>(1, get_root(i)));
+		new_parser._index.push_back(std::pair<size_t, std::list<std::string> >(1, get_index(i)));
+		new_parser._error_log.push_back(std::pair<size_t, std::pair<std::string, size_t> >(1, get_error_log(i)));
+		new_parser._access_log.push_back(std::pair<size_t, std::pair<std::string, size_t> >(1, get_access_log(i)));
+		new_parser._error_page.push_back(std::pair<size_t, std::string>(1, get_error_page(i)));
+		new_parser._limit_request.push_back(std::pair<size_t, size_t>(1, get_limit_request(i)));
+		new_parser._method_lists.push_back(std::pair<size_t, std::list<std::string> >(1, get_method_lists(i)));
+		new_parser._cgi_php.push_back(std::pair<size_t, std::string>(1, get_cgi_php(i)));
+		new_parser._cgi_py.push_back(std::pair<size_t, std::string>(1, get_cgi_py(i)));
+		new_parser._file_save.push_back(std::pair<size_t, std::string>(1, get_file_save(i)));
+		new_parser._body_limit.push_back(std::pair<size_t, size_t>(1, get_body_limit(i)));
 		new_parser._file_created = _file_created;
 		new_parser._file_bad_request = _file_bad_request;
 		new_parser._file_unauthorized = _file_unauthorized;
@@ -119,7 +119,7 @@ public:
 
 private:
 
-	bool	parse_logfiles( std::string file ) {
+	bool	parse_logfiles( const std::string &file ) const {
 		std::ofstream ofs(file.c_str(), std::ofstream::out | std::ofstream::app);
 		if (!ofs) {
 			perror("Error: Can't open or create a log file");
@@ -129,7 +129,7 @@ private:
 		return (true);
 	}
 
-	bool	parse_files( std::string file ) {
+	bool	parse_files( const std::string &file ) const {
 		std::ifstream ifs(file.c_str());
 		if (!ifs) {
 			perror(std::string(file).c_str());
@@ -152,8 +152,8 @@ private:
 
 
 	bool	parse_methode_server( void ) {
-		int	pos = _data_conf.find("server");
-		if (pos == -1) {
+		size_t	pos = _data_conf.find("server");
+		if (pos == std::string::npos) {
 			if (_nb_conf_serv > 1)
 				return (false);
 			std::cerr << "No methode server in config file" 
@@ -162,7 +162,7 @@ private:
 		}
 		_data_conf = _data_conf.substr(pos);
 		pos = _data_conf.find("{");
-		if (pos == -1 || pos != _data_conf.find_first_not_of("server ")) {
+		if (pos == std::string::npos || pos != _data_conf.find_first_not_of("server ")) {
 			if (_nb_conf_serv > 1)
 				return (false);
 			std::cerr << "Syntax error: " << __FUNCTION__
@@ -171,7 +171,7 @@ private:
 		}
 		_data_conf = _data_conf.substr(pos);
 		pos = _data_conf.find("}");
-		if (pos == -1) {
+		if (pos == std::string::npos) {
 			if (_nb_conf_serv > 1)
 				return (false);
 			std::cerr << "Syntax error: " << __FUNCTION__
@@ -191,7 +191,7 @@ private:
 
 
 	void	parse_config_methode( void ) {
-		int	pos = _data_conf.find_first_not_of(" \t\n\r");
+		size_t	pos = _data_conf.find_first_not_of(" \t\n\r");
 		_data_conf = _data_conf.substr(pos);
 		pos = _data_conf.find_first_of(" \t");
 		if (pos == std::string::npos) {
@@ -223,14 +223,14 @@ private:
 		return ;
 	}
 
-	void	too_more_config_method( std::string func ) {
+	void	too_more_config_method( const char * const func ) const {
 		std::cerr << "Syntax error: " << __FUNCTION__
 			<< ": " << __LINE__ << ": " << func << std::endl;
 			exit(EXIT_FAILURE);
 	}
 
 
-	void	set_config_methode( std::string &tmp , int i) {
+	void	set_config_methode( const std::string &tmp , const int i) {
 		switch (i) {
 			case 0: if (_port.size() < _nb_conf_serv) set_listen(tmp); else too_more_config_method("set_listen"); break ;
 			case 1: if (_server_name.size() < _nb_conf_serv) set_server_name(tmp); else too_more_config_method("set_server_name"); break ;
@@ -245,14 +245,14 @@ private:
 			case 10: if (_cgi_py.size() < _nb_conf_serv) set_cgi_py(tmp); else too_more_config_method("set_cgi_py"); break ;
 			case 11: if (_file_save.size() < _nb_conf_serv) set_file_save(tmp); else too_more_config_method("set_file_save"); break ;
 			case 12: if (_body_limit.size() < _nb_conf_serv) set_body_limit(tmp); else too_more_config_method("set_body_limit"); break ;
-			case 13: set_comment_line(tmp); break ;
+			case 13: set_comment_line(); break ;
 		}
 		return ;
 	}
 
 	# include "./parser_utils/parser_setters.hpp"
 
-	int	count_line_in_file( const std::string &path ) {
+	int	count_line_in_file( const std::string &path ) const {
 		std::ifstream	file(path.c_str(), std::ifstream::in);
 		int				count = 0;
 
@@ -263,41 +263,39 @@ private:
 	}
 
 	void	parse_all_parameters( void ) {
-		if (get_port(_nb_conf_serv - 1).empty()) {
-			std::list<int> empty_list(1, 8080);
-			std::pair<int, std::list<int> > new_pair = std::make_pair(_nb_conf_serv, empty_list);
-			_port.push_back(new_pair);
-		}
+		if (get_port(_nb_conf_serv - 1).empty())
+			_port.push_back(std::make_pair(\
+				_nb_conf_serv, std::list<size_t>(1, 8080)));
 		else {
-			std::list<int> ls = get_port(_nb_conf_serv - 1);
-			for (std::list<int>::iterator it = ls.begin(); it != ls.end(); ++it)
-				if(*it < 0 || *it > 65536){
+			std::list<size_t> ls = get_port(_nb_conf_serv - 1);
+			for (std::list<size_t>::const_iterator it = ls.begin(); it != ls.end(); ++it)
+				if(*it > 65536){
 					std::cerr << "Error: Invalid port: " << *it << std::endl;
-					exit(1);
+					exit(EXIT_FAILURE);
 				}
-			}
+		}
 		if (get_server_name(_nb_conf_serv - 1).empty()) 
-			_server_name.push_back(std::pair<int, std::string>(_nb_conf_serv, "dinopoulet.42.fr"));
+			_server_name.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "dinopoulet.42.fr"));
 		if (get_index(_nb_conf_serv - 1).empty()) {
 			std::list<std::string> empty_list;
 			empty_list.push_back("index.html");
 			empty_list.push_back("index.php");
-			_index.push_back(std::pair<int, std::list<std::string> >(_nb_conf_serv, empty_list));
+			_index.push_back(std::pair<size_t, std::list<std::string> >(_nb_conf_serv, empty_list));
 		}
 		if (get_error_log(_nb_conf_serv - 1).first.empty())
-			_error_log.push_back(std::pair<int, std::pair<std::string, int> >(_nb_conf_serv, \
-				std::pair<std::string, int>("./logs/error.log", count_line_in_file("./logs/error.log"))));
+			_error_log.push_back(std::pair<size_t, std::pair<std::string, size_t> >(_nb_conf_serv, \
+				std::pair<std::string, size_t>("./logs/error.log", count_line_in_file("./logs/error.log"))));
 		if (get_access_log(_nb_conf_serv - 1).first.empty())
-			_access_log.push_back(std::pair<int, std::pair<std::string, int> >(_nb_conf_serv, \
-				std::pair<std::string, int>("./logs/access.log", count_line_in_file("./logs/access.log"))));
+			_access_log.push_back(std::pair<size_t, std::pair<std::string, size_t> >(_nb_conf_serv, \
+				std::pair<std::string, size_t>("./logs/access.log", count_line_in_file("./logs/access.log"))));
 		if (get_error_page(_nb_conf_serv - 1).empty())
-			_error_page.push_back(std::pair<int, std::string>(_nb_conf_serv, "./tools/not_found.html"));
+			_error_page.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./tools/not_found.html"));
 		if (!get_limit_request(_nb_conf_serv - 1))	
-			_limit_request.push_back(std::pair<int, int>(_nb_conf_serv, 4096));
+			_limit_request.push_back(std::pair<size_t, size_t>(_nb_conf_serv, MAX_LIMIT_REQUEST));
 		else {			
-			if (get_limit_request(_nb_conf_serv - 1) < 1024 || get_limit_request(_nb_conf_serv - 1) > 102400) {
-				std::cerr << "Error: Limit request must be between 1024-102400" << std::endl;
-				exit(1);
+			if (get_limit_request(_nb_conf_serv - 1) < MIN_LIMIT_REQUEST || get_limit_request(_nb_conf_serv - 1) > MAX_LIMIT_REQUEST) {
+				std::cerr << "Error: Limit request must be between " << MIN_LIMIT_REQUEST << " - " << MAX_LIMIT_REQUEST << std::endl;
+				exit(EXIT_FAILURE);
 			} 
 		}
 		if (get_method_lists(_nb_conf_serv - 1).empty()) {
@@ -305,14 +303,14 @@ private:
 			empty_list.push_back("GET");
 			empty_list.push_back("POST");
 			empty_list.push_back("DELETE");
-			std::pair<int, std::list<std::string> > new_pair = std::make_pair(_nb_conf_serv, empty_list);
+			std::pair<size_t, std::list<std::string> > new_pair = std::make_pair(_nb_conf_serv, empty_list);
 			_method_lists.push_back(new_pair);
 
 		}
 		{
 			const char	*method[] = { "GET", "POST", "DELETE", "" };
 			std::list<std::string> ls = get_method_lists(_nb_conf_serv - 1);
-			for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it) {
+			for (std::list<std::string>::const_iterator it = ls.begin(); it != ls.end(); ++it) {
 				int a;
 				for (a = 0; strlen(method[a]); a++) {
 					if (method[a] == *it)
@@ -325,14 +323,14 @@ private:
 			}
 		}
 		if (get_cgi_php(_nb_conf_serv - 1).empty())
-			_cgi_php.push_back(std::pair<int, std::string>(_nb_conf_serv, "./cgi_bin/php-cgi"));
-
+			_cgi_php.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./cgi_bin/php-cgi"));
 		if (get_cgi_py(_nb_conf_serv - 1).empty())
-			_cgi_py.push_back(std::pair<int, std::string>(_nb_conf_serv, "./cgi_bin/python3.7"));		if (get_file_save(_nb_conf_serv - 1).empty())
-			_file_save.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/upload/"));		
-		if (get_body_limit(_nb_conf_serv - 1) > 1000000000) {
-			std::cerr << "Error: The body limit cannot be set above 1GB" << std::endl;
-			exit(1);
+			_cgi_py.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./cgi_bin/python3.7"));		
+		if (get_file_save(_nb_conf_serv - 1).empty())
+			_file_save.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./www/upload/"));		
+		if (get_body_limit(_nb_conf_serv - 1) > MAX_BODY_LIMIT) {
+			std::cerr << "Error: Limit request must be between 1024-4096" << std::endl;
+			exit(EXIT_FAILURE);
 		} 
 	}
 
@@ -347,23 +345,26 @@ public:
 std::ostream&	operator<<( std::ostream &o, const Parser &p) {
 	for (int i = 0; i < p.get_nb_conf_serv(); ++i) {
 		std::cout << "---------------- CONFIG " << i << " ----------------" << std::endl;
-		std::cout << "Port[" << i << "]\t\t\t: "; { std::list<int> ls = p.get_port(i);
-		for (std::list<int>::iterator it = ls.begin(); it != ls.end(); ++it)
-			std::cout << "(" << *it << ")"; std::cout << std::endl; }
+		std::cout << "Port[" << i << "]\t\t\t: "; { std::list<size_t> ls = p.get_port(i);
+		for (std::list<size_t>::const_iterator it = ls.begin(); it != ls.end(); ++it)
+			std::cout << "(" << *it << ")"; 
+		std::cout << std::endl; }
 		std::cout << "Server_name[" << i << "]\t\t: " << p.get_server_name(i) << std::endl;
 		std::cout << "Root[" << i << "]\t\t\t: " << p.get_root(i) << std::endl;
 		std::cout << "Index[" << i << "]\t\t: "; { std::list<std::string> ls = p.get_index(i);
-		for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it)
-			std::cout << "(" << *it << ")"; std::cout << std::endl; } 
-		{ std::pair<std::string, int> pr = p.get_error_log(i);
+		for (std::list<std::string>::const_iterator it = ls.begin(); it != ls.end(); ++it)
+			std::cout << "(" << *it << ")"; 
+		std::cout << std::endl; } 
+		{ std::pair<std::string, size_t> pr = p.get_error_log(i);
 		std::cout << "Error_log[" << i << "]\t\t: " << pr.first << ": " << pr.second << std::endl;
-		} { std::pair<std::string, int> pr = p.get_access_log(i);
+		} { std::pair<std::string, size_t> pr = p.get_access_log(i);
 		std::cout << "Access_log[" << i << "]\t\t: " << pr.first << ": " << pr.second << std::endl; }
 		std::cout << "Error_page[" << i << "]\t\t: " << p.get_error_page(i) << std::endl;
 		std::cout << "Limit_request[" << i << "]\t: " << p.get_limit_request(i) << std::endl;
 		std::cout << "Method_request[" << i << "]\t: "; { std::list<std::string> ls = p.get_method_lists(i);
-		for (std::list<std::string>::iterator it = ls.begin(); it != ls.end(); ++it)
-			std::cout << "(" << *it << ")"; std::cout << std::endl; }
+		for (std::list<std::string>::const_iterator it = ls.begin(); it != ls.end(); ++it)
+			std::cout << "(" << *it << ")"; 
+		std::cout << std::endl; }
 		std::cout << "Cgi_php[" << i << "]\t\t: " << p.get_cgi_php(i) << std::endl;
 		std::cout << "Cgi_py[" << i << "]\t\t: " << p.get_cgi_py(i) << std::endl;
 		std::cout << "File_save[" << i << "]\t\t: " << p.get_file_save(i) << std::endl;

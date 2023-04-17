@@ -2,10 +2,8 @@
 # define __REQUEST_GET_HPP__
 
 
-void	open_files( std::ifstream &open, std::string &path, std::string &msg )
-{
+void	open_files( std::ifstream &open, std::string &path) const {
 	std::ifstream		file_tmp;
-	int					i = 0;
 
 	if (open.is_open())
 		open.close();
@@ -27,7 +25,7 @@ void	open_files( std::ifstream &open, std::string &path, std::string &msg )
 				if (open.is_open()) {
 					path += *it;
 					if (path.at(path.size() - 1) == '/')
-						open_files(open, path, msg);
+						open_files(open, path);
 					return ;
 				}
 			}
@@ -39,7 +37,7 @@ void	open_files( std::ifstream &open, std::string &path, std::string &msg )
 }
 
 
-void	execute_cgi_php( std::string &path_php, std::string &msg ) {
+void	execute_cgi_php( const std::string &path_php, std::string &msg ) const {
 	int				fd_pipe[2];
 	pid_t			pid;
 	const char		*ag[3] = {_parser.get_cgi_php(0).c_str(), path_php.c_str(), NULL};
@@ -77,7 +75,7 @@ void	execute_cgi_php( std::string &path_php, std::string &msg ) {
 }
 
 
-void	execute_cgi_python( std::string &path_php, std::string &msg ) {
+void	execute_cgi_python( const std::string &path_php, std::string &msg ) const {
 	int				fd_pipe[2];
 	pid_t			pid;
 	const char		*ag[3] = {_parser.get_cgi_py(0).c_str(), path_php.c_str(), NULL};
@@ -114,12 +112,11 @@ void	execute_cgi_python( std::string &path_php, std::string &msg ) {
 	return ;
 }
 
-void	create_copy(std::string path, std::string name)
-{
+void	create_copy( const std::string &path, const std::string &name ) const {
 	std::string		msg;
 	std::string		file = _parser.get_file_save(0);
 	std::ifstream	ifs(("./tools/template/" + name).c_str());
-	std::ofstream	copy(path.c_str(), std::ofstream::trunc);
+	std::ofstream	copy(path.c_str());
 
 	if (!ifs || !copy)
 	{
@@ -149,7 +146,7 @@ void	create_copy(std::string path, std::string name)
 	return;
 }
 
-void	get_request_get( std::map<std::string, std::string> &request) {
+void	get_request_get( void ) const {
 	std::ifstream	web_page;
 	std::string		path;
 	std::string		msg;
@@ -157,11 +154,11 @@ void	get_request_get( std::map<std::string, std::string> &request) {
 	path = _parser.get_root(0);
 	if (path[path.size() - 1] == '/')
 		path.erase(path.size() - 1);
-	path += request["GET"].substr(0, request["GET"].find_first_of(' '));
+	path += _request.at("GET").substr(0, _request.at("GET").find_first_of(' '));
 	path = urldecode(path);
 	if (path == "./www/delete.php")
 		create_copy(path, "delete.php");
-	open_files(web_page, path, msg);
+	open_files(web_page, path);
 	if (path.size() > 4 \
 		&& !path.compare(path.size() - 4, 4, ".php"))
 		execute_cgi_php(path, msg);
@@ -174,7 +171,7 @@ void	get_request_get( std::map<std::string, std::string> &request) {
 			msg += line + '\n'; 
 	}
 	web_page.close();
-	ret_request_http(request, msg, 200);
+	ret_request_http(msg, 200);
 }
 
 

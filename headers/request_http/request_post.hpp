@@ -2,7 +2,7 @@
 # define __REQUEST_POST_HPP__
 
 
-std::string	get_request_post_boudary( std::string &content_type ) {
+std::string	get_request_post_boudary( const std::string &content_type ) const {
 	int			pos = content_type.find("boundary=");
 	if (pos == -1)
 		Error_exception::error(_parser.get_file_bad_request(), 400);
@@ -14,7 +14,7 @@ std::string	get_request_post_boudary( std::string &content_type ) {
 
 
 void	set_request_post_data( const std::string &host,
-	std::string &tmp, const std::string &boundary ) {
+	std::string &tmp, const std::string &boundary ) const {
 	tmp = tmp.substr(tmp.find(boundary) + boundary.size());
 	if (tmp == "--\r\n")
 		return ;
@@ -36,16 +36,17 @@ void	set_request_post_data( const std::string &host,
 }
 
 
-void	get_request_post( std::map<std::string, std::string> &request ) {
-if (!request.count("Request-Content") || !request["Request-Content"].size())
+void	get_request_post( void ) const {
+	if (!_request.count("Request-Content") || !_request.at("Request-Content").size())
 		Error_exception::error(_parser.get_file_bad_request(), 400);
-	if (!request.count("Content-Type:"))
+	if (!_request.count("Content-Type:"))
 		Error_exception::error(_parser.get_file_bad_request(), 400);
-	std::string	boundary = get_request_post_boudary(request["Content-Type:"]);
-	request.count("Host:") \
-		? set_request_post_data(request["Host:"], request["Request-Content"], boundary) \
-		: set_request_post_data(std::string(), request["Request-Content"], boundary);
-	ret_request_http(request, _parser.get_file_created(), 201);
+	std::string	boundary = get_request_post_boudary(_request.at("Content-Type:"));
+	std::string	tmp = _request.at("Request-Content");
+	_request.count("Host:") \
+		? set_request_post_data(_request.at("Host:"), tmp, boundary) \
+		: set_request_post_data(std::string(), tmp, boundary);
+	ret_request_http(_parser.get_file_created(), 201);
 	return ;
 }
 
