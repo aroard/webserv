@@ -82,6 +82,7 @@ public:
 					if (request["Methode-http:"] == "GET") get_request_get(request);
 					else if (request["Methode-http:"] == "POST") get_request_post(request);
 					else if (request["Methode-http:"] == "DELETE") get_request_delete(request);
+					else if (request["Methode-http:"] == "REDIRECT") get_request_redirection(request);
 					else ret_request_http(request, _parser.get_file_methode_not_allowed(), 405); 
 					return ;
 				}

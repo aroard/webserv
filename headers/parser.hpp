@@ -331,7 +331,7 @@ private:
 			_cgi_py.push_back(std::pair<int, std::string>(_nb_conf_serv, "./cgi_bin/python3.7"));		if (get_file_save(_nb_conf_serv - 1).empty())
 			_file_save.push_back(std::pair<int, std::string>(_nb_conf_serv, "./www/upload/"));		
 		if (get_body_limit(_nb_conf_serv - 1) > 1000000000) {
-			std::cerr << "Error: Limit request must be between 1024-4096" << std::endl;
+			std::cerr << "Error: The body limit cannot be set above 1GB" << std::endl;
 			exit(1);
 		} 
 	}

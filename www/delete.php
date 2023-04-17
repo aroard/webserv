@@ -112,8 +112,9 @@ if (is_dir($dir)) {
                 echo '<input type="hidden" name="Methode-http" value="DELETE">';
                 echo '<input type="submit" name="delete" value="Delete">';
                 echo '</form>';
-                echo '<form method="GET" action="' . urldecode($dir . $file) . '">';
-                echo '<button type="submit">Download</button>';
+                echo '<form method="POST" action="' . urldecode($dir . $file) . '">';
+                echo '<input type="hidden" name="Methode-http" value="REDIRECT">';
+                echo '<input type="submit" name="redirect" value="Download">';
                 echo '</form>';
                 echo '</div>';
             }

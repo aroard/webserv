@@ -119,7 +119,7 @@ void	create_copy(std::string path, std::string name)
 	std::string		msg;
 	std::string		file = _parser.get_file_save(0);
 	std::ifstream	ifs(("./tools/template/" + name).c_str());
-	std::ofstream	copy(path.c_str());
+	std::ofstream	copy(path.c_str(), std::ofstream::trunc);
 
 	if (!ifs || !copy)
 	{

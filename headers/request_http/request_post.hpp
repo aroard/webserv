@@ -37,7 +37,7 @@ void	set_request_post_data( const std::string &host,
 
 
 void	get_request_post( std::map<std::string, std::string> &request ) {
-	if (!request.count("Request-Content") || !request["Request-Content"].size())
+if (!request.count("Request-Content") || !request["Request-Content"].size())
 		Error_exception::error(_parser.get_file_bad_request(), 400);
 	if (!request.count("Content-Type:"))
 		Error_exception::error(_parser.get_file_bad_request(), 400);
