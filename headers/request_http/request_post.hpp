@@ -23,8 +23,6 @@ void	set_request_post_data( const std::string &host,
 		Error_exception::error(_parser.get_file_bad_request(), 400);
 	pos += strlen("filename=\"");
 	std::string 	filename = tmp.substr(pos, tmp.find_first_of("\"\r\n", pos) - pos);
-	if (!host.empty())
-		filename = host + '_' + filename;
 	std::ofstream	img(( _parser.get_file_save(0) + filename).c_str(), std::ios::out | std::ofstream::binary);
 	if (img.is_open() == false)
 		Error_exception::error(_parser.get_file_internal_server_error(), 500);
