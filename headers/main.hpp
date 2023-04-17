@@ -68,6 +68,13 @@ const std::string	g_config_methode[] = {	"listen", "server_name", "root", \
 											"method_lists", "cgi_php", "cgi_py", \
 											"file_save", "body_limit", "#", ""};
 
+
+const std::string	g_img[] = {	".jpg", ".png", ".gif", \
+									".bmp", ".tif", ".webp", ".jpeg", ""};
+
+const std::string	g_video[] = { ".mp4", ".avi", ".mov", ".wmv", \
+									".flv", ".mkv", ".webm", ""};
+
 	void	put_line( std::string line ) {
 		for (std::string::iterator it = line.begin();
 			it != line.end(); ++it) {
@@ -82,7 +89,6 @@ const std::string	g_config_methode[] = {	"listen", "server_name", "root", \
 		}
 		return ;
 	}
-
 
 # include "parser.hpp"
 # include "client.hpp"

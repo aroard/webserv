@@ -101,7 +101,6 @@ if (is_dir($dir)) {
                             <a href="upload.html">Upload</a>
                             <a href="delete.php">My Files</a>
                             <a href="./aboutus.html">About us</a>
-                            <a href="./test.php">Test</a>
                         </nav>
                         <section>';
         while (($file = readdir($dh)) !== false) {
@@ -114,7 +113,7 @@ if (is_dir($dir)) {
                 echo '</form>';
                 echo '<form method="POST" action="' . urldecode($dir . $file) . '">';
                 echo '<input type="hidden" name="Methode-http" value="REDIRECT">';
-                echo '<input type="submit" name="redirect" value="Download">';
+                echo '<input type="submit" name="redirect" value="View">';
                 echo '</form>';
                 echo '</div>';
             }
