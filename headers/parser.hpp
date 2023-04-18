@@ -329,7 +329,7 @@ private:
 		if (get_file_save(_nb_conf_serv - 1).empty())
 			_file_save.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./www/upload/"));		
 		if (get_body_limit(_nb_conf_serv - 1) > MAX_BODY_LIMIT) {
-			std::cerr << "Error: Limit request must be between 1024-4096" << std::endl;
+			std::cerr << "Error: Body limit cannot exceed 1 GB !" << std::endl;
 			exit(EXIT_FAILURE);
 		} 
 	}
