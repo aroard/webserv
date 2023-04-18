@@ -262,6 +262,30 @@ private:
 		return (count);
 	}
 
+	bool parse_empty_parameters(std::string str, int create) {
+		std::ifstream ofs;
+
+		if (access(str.c_str(), F_OK) != 0)
+		{
+			std::cerr << str + " does not exist" << std::endl;
+			if (create)
+			{
+				std::cout << "creating file: " + str << std::endl;
+				ofs.open(str.c_str());
+				if (!ofs)
+					return false;
+				else
+					return true;
+			}
+		}
+		if (access(str.c_str(), R_OK | X_OK) != 0)
+		{
+			std::cerr << "Error: Path " + str << std::endl;
+			return (false);
+		}
+		return true;
+	}	
+
 	void	parse_all_parameters( void ) {
 		if (get_port(_nb_conf_serv - 1).empty())
 			_port.push_back(std::make_pair(\
@@ -282,14 +306,23 @@ private:
 			empty_list.push_back("index.php");
 			_index.push_back(std::pair<size_t, std::list<std::string> >(_nb_conf_serv, empty_list));
 		}
-		if (get_error_log(_nb_conf_serv - 1).first.empty())
+		if (get_error_log(_nb_conf_serv - 1).first.empty()) {
+			if (parse_empty_parameters("./logs/error.log", 1) == false)
+				exit(EXIT_FAILURE);
 			_error_log.push_back(std::pair<size_t, std::pair<std::string, size_t> >(_nb_conf_serv, \
 				std::pair<std::string, size_t>("./logs/error.log", count_line_in_file("./logs/error.log"))));
-		if (get_access_log(_nb_conf_serv - 1).first.empty())
+		}
+		if (get_access_log(_nb_conf_serv - 1).first.empty()) {
+			if(parse_empty_parameters("./logs/access.log", 1))
+				exit(EXIT_FAILURE);
 			_access_log.push_back(std::pair<size_t, std::pair<std::string, size_t> >(_nb_conf_serv, \
 				std::pair<std::string, size_t>("./logs/access.log", count_line_in_file("./logs/access.log"))));
-		if (get_error_page(_nb_conf_serv - 1).empty())
+		}
+		if (get_error_page(_nb_conf_serv - 1).empty()) {
+			if (parse_empty_parameters("./tools/not_found.html", 0) == false)
+				exit(EXIT_FAILURE);
 			_error_page.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./tools/not_found.html"));
+		}
 		if (!get_limit_request(_nb_conf_serv - 1))	
 			_limit_request.push_back(std::pair<size_t, size_t>(_nb_conf_serv, MAX_LIMIT_REQUEST));
 		else {			
@@ -322,12 +355,21 @@ private:
 				}
 			}
 		}
-		if (get_cgi_php(_nb_conf_serv - 1).empty())
+		if (get_cgi_php(_nb_conf_serv - 1).empty()) {
+			if (parse_empty_parameters("./cgi_bin/php-cgi", 0) == false)
+				std::cerr << "Warning: Server will launch without CGI PHP" << std::endl;
 			_cgi_php.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./cgi_bin/php-cgi"));
-		if (get_cgi_py(_nb_conf_serv - 1).empty())
-			_cgi_py.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./cgi_bin/python3.7"));		
-		if (get_file_save(_nb_conf_serv - 1).empty())
-			_file_save.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./www/upload/"));		
+		}
+		if (get_cgi_py(_nb_conf_serv - 1).empty()) {
+			if (parse_empty_parameters("./cgi_bin/python3.7", 0) == false)
+				std::cerr << "Warning: Server will launch without CGI PHP" << std::endl;
+			_cgi_py.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./cgi_bin/python3.7"));	
+		}	
+		if (get_file_save(_nb_conf_serv - 1).empty()) {
+			if (parse_empty_parameters("./www/upload/", 0) == false)
+				exit(EXIT_FAILURE);
+			_file_save.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./www/upload/"));
+		}		
 		if (get_body_limit(_nb_conf_serv - 1) > MAX_BODY_LIMIT) {
 			std::cerr << "Error: Body limit cannot exceed 1 GB !" << std::endl;
 			exit(EXIT_FAILURE);
