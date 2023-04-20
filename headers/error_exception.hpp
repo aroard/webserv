@@ -16,7 +16,7 @@ public:
 	
 	static void socket_close( int signum ) { throw Error_exception("Socket is closing", 1); (void)signum; }
 	
-	static void interruption_server( int signum ) { throw Error_exception("\rServer is down", 0); (void)signum; }
+	static void interruption_server( int signum ) { throw Error_exception("\rServer down", 0); (void)signum; }
 	
 	static void error( const std::string &msg_err, const int error_code ) { 
 		throw Error_exception(msg_err, error_code);

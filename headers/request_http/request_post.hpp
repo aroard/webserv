@@ -45,13 +45,7 @@ void	get_request_post( void ) const {
 	_request.count("Host:") \
 		? set_request_post_data(_request.at("Host:"), tmp, boundary) \
 		: set_request_post_data(std::string(), tmp, boundary);
-	std::string redirection = _parser.get_file_created();
-	std::stringstream ss;
-	ss << _port;
-	std::string port_str = ss.str();
-	if (redirection.find("PORT") != std::string::npos)
-		redirection.replace(redirection.find("PORT"), 4, port_str);
-	ret_request_http(redirection, 201);
+	ret_request_http(_parser.get_file_created(), 201);
 	return ;
 }
 

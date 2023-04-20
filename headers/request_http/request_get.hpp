@@ -104,7 +104,7 @@ void	execute_cgi_python( const std::string &path_php, std::string &msg ) const {
 	while (read(fd_pipe[0], tmp, 2047) > 0) { 
 		msg += tmp;
 		std::memset(tmp, 0, 2047); 
-	}										// RAJOUTER CONTENT-LENGHT ?
+	}
 	close(fd_pipe[0]);
 	waitpid(pid, &status, 0);
 	if (status != 0)

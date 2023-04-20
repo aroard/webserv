@@ -1,5 +1,5 @@
 <?php
-$dir = "./upload/";
+$dir = "./upload/test/caca/";
 
 if (is_dir($dir)) {
     if ($dh = opendir($dir)) {

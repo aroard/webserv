@@ -121,13 +121,25 @@ void	set_server_name( const std::string &tmp ) {
 
 
 void	set_root( const std::string &tmp ) {
+	std::string	with_slash;
 	const std::pair<size_t, std::list<std::string> > root = parse_template_set(tmp);
 	if (root.second.size() != 1) {
 		std::cerr << "Syntax error: " << __FUNCTION__
 			<< ": " << __LINE__ << std::endl;
 		exit(EXIT_FAILURE);
 	}
-
+	if (root.second.front().substr(root.second.front().length() - 1) != "/") {  
+		std::cerr << "Error: Path of root (" + root.second.front() + ") is wrong, it must end with a slash" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (access(root.second.front().c_str(), F_OK) != 0) {
+		std::cerr << "Error: Path of root (" + root.second.front() + ") is wrong" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (access(root.second.front().c_str(), R_OK | X_OK) != 0) {
+		std::cerr << "Error: Path of root has the wrong right" << std::endl;
+		exit(EXIT_FAILURE);
+	}
 	if(!parse_files(root.second.front()))
 		exit(EXIT_FAILURE);
 	_root.push_back(std::pair<size_t, std::string>(root.first, root.second.front()));
@@ -232,23 +244,26 @@ void	set_cgi_py( const std::string &tmp ) {
 }
 	
 void	set_file_save( const std::string &tmp ) {
-	std::pair<size_t, std::list<std::string> > file_save = parse_template_set(tmp);
+	const std::pair<size_t, std::list<std::string> > file_save = parse_template_set(tmp);
 	if (file_save.second.size() != 1) {
 		std::cerr << "Syntax error: " << __FUNCTION__
 			<< ": " << __LINE__ << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	if (file_save.second.front().substr(file_save.second.front().length() - 1) != "/")
-		file_save.second.front() = file_save.second.front() + "/";
-
-	if (access(file_save.second.front().c_str(), F_OK) != 0)
-	{
-		std::cerr << "Error: Path of file_save is wrong" << std::endl;
+	if (file_save.second.front().substr(file_save.second.front().length() - 1) != "/") {  
+		std::cerr << "Error: Path of file_save (" + file_save.second.front() + ") is wrong, it must end with a slash" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	if (access(file_save.second.front().c_str(), R_OK | X_OK) != 0)
-	{
-		std::cerr << "Error: Path of has the wrong right" << std::endl;
+	if (file_save.second.front().find("./www/upload/") != 0) {  
+		std::cerr << "Error: Path of file_save (" + file_save.second.front() + ") is wrong, it must start by ./www/upload/ for safety reasons" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (access(file_save.second.front().c_str(), F_OK) != 0) {
+		std::cerr << "Error: Path of file_save (" + file_save.second.front() + ") is wrong" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (access(file_save.second.front().c_str(), R_OK | X_OK) != 0) {
+		std::cerr << "Error: Path of file_save has the wrong right" << std::endl;
 		exit(EXIT_FAILURE);
 	}
 	_file_save.push_back(std::pair<size_t, std::string>(file_save.first, file_save.second.front()));

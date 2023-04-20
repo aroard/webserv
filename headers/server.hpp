@@ -55,7 +55,7 @@ public:
 
 
 	void	start( void ) {
-		std::cout << "Server is starting" << std::endl;
+		std::cout << "Server is starting..." << std::endl;
 		int									nsocket = _socketServer.size();
 		int									i = 0;
 		int 								kq = kqueue();
