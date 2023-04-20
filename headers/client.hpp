@@ -6,7 +6,6 @@ class Client
 {
 private:
 	std::map<std::string, std::string>	_request;
-	size_t								_size_request;
 	const int							_socketClient;
 	const int							_port;
 	Parser								&_parser;
@@ -61,7 +60,6 @@ public:
 				break ;
 		}
 		delete[] tmp;
-		_size_request = msg.size();
 		get_request_http(msg);
 		return (true);
 	}
@@ -70,7 +68,7 @@ public:
 	void	send_request_http( void ) const {
 		try {
 			const size_t	body_limit = _parser.get_body_limit(0);	
-			if (body_limit == 0 || body_limit > _size_request) {
+			if (body_limit == 0 || body_limit >= _request.at("Request-Content").size()) {
 				std::list<std::string>	ls = _parser.get_method_lists(0);
 				for (std::list<std::string>::const_iterator it = ls.begin();
 					it != ls.end(); ++it) {
