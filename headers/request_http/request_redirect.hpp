@@ -2,7 +2,11 @@
 # define __REQUEST_REDIRECT_HPP__
 
 
-bool	is_image(const std::string &type) {
+static const std::string	_st_str_img[];
+static const std::string	_st_str_video[];
+
+
+bool	is_image( const std::string &type ) const {
 	int			reversed;
 	std::string	extension;
 
@@ -13,16 +17,16 @@ bool	is_image(const std::string &type) {
 
 	if (reversed > 3) {
 		extension = type.substr(reversed);
-		for (int i = 0; !g_img[i].empty(); ++i) {
-			if (extension == g_img[i])
-				return true;
+		for (int i = 0; !_st_str_img[i].empty(); ++i) {
+			if (extension == _st_str_img[i])
+				return (true);
 		}
 	}
-	return false;
+	return (false);
 }
 
 
-bool	is_video(const std::string &type) {
+bool	is_video( const std::string &type ) const {
 	int			reversed;
 	std::string	extension;
 
@@ -33,16 +37,16 @@ bool	is_video(const std::string &type) {
 
 	if (reversed > 3) {
 		extension = type.substr(reversed);
-		for (int i = 0; !g_video[i].empty(); ++i) {
-			if (extension == g_video[i])
-				return true;
+		for (int i = 0; !_st_str_video[i].empty(); ++i) {
+			if (extension == _st_str_video[i])
+				return (true);
 		}
 	}
-	return false;
+	return (false);
 }
 
 
-std::string	create_redirect(std::string path)  {
+std::string	create_redirect( std::string path ) const {
 	int				reversed = 0;
 	std::string		msg;
 	std::string		name = path;
@@ -50,7 +54,7 @@ std::string	create_redirect(std::string path)  {
 	std::ifstream	ifs;
 
 	if(path.find("//") != std::string::npos)
-			path.replace(path.find("//"), 2, "/");
+		path.replace(path.find("//"), 2, "/");
 	if (is_image(path) == true)
 		ifs.open("./tools/template/downloadimg.html");
 	else if (is_video(path) == true)
@@ -59,12 +63,10 @@ std::string	create_redirect(std::string path)  {
 		ifs.open("./tools/template/downloadelse.html");
 	if (path.find("/www/upload/") != std::string::npos)
 		path.replace(path.find("/www/upload/"), 12, "/");
-	if (!ifs)
-	{
+	if (!ifs) {
 		std::cerr << "Error Template" << std::endl;
-		return string_to_return;
+		return (string_to_return);
 	}
-
 	for (reversed = name.size(); reversed >= 0; reversed--) {
 		if (name[reversed] == '/'){
 			reversed++;
@@ -80,11 +82,11 @@ std::string	create_redirect(std::string path)  {
 		string_to_return += msg;
 	}
 	ifs.close();
-	return string_to_return;
+	return (string_to_return);
 }
 
 
-void	get_request_redirect( void ) {
+void	get_request_redirect( void ) const {
 	if (!_request.count("POST"))
 		Error_exception::error(_parser.get_file_bad_request(), 400);
 	const size_t pos = _request.at("POST").find_first_of(" \r\n");

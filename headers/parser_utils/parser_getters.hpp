@@ -84,17 +84,18 @@ size_t							get_body_limit( const size_t num_conf ) const {
 }
 
 
-std::string					get_file_created( void ) const { return (_file_created); }
-std::string                 get_file_deleted( void ) const { return (_file_deleted); }
-std::string					get_file_bad_request( void ) const { return (_file_bad_request); }
-std::string					get_file_unauthorized( void ) const { return (_file_unauthorized); }
-std::string					get_file_forbidden( void ) const { return (_file_forbidden); }
-std::string					get_file_not_found( void ) const { return (_file_not_found); }
-std::string					get_file_methode_not_allowed( void ) const { return (_file_methode_not_allowed); }
-std::string					get_file_internal_server_error( void ) const { return (_file_internal_server_error); }
-std::string					get_file_authenticated( void ) const { return (_file_authenticated); }
-std::string					get_file_register( void ) const { return (_file_register); }
-std::string					get_file_login( void ) const { return (_file_login); }
+const std::string&			get_file_created( void ) const { return (_file_created); }
+const std::string&			get_file_deleted( void ) const { return (_file_deleted); }
+const std::string&			get_file_bad_request( void ) const { return (_file_bad_request); }
+const std::string&			get_file_unauthorized( void ) const { return (_file_unauthorized); }
+const std::string&			get_file_forbidden( void ) const { return (_file_forbidden); }
+const std::string&			get_file_not_found( void ) const { return (_file_not_found); }
+const std::string&			get_file_methode_not_allowed( void ) const { return (_file_methode_not_allowed); }
+const std::string&			get_file_body_limit( void ) const { return (_file_body_limit); }
+const std::string&			get_file_internal_server_error( void ) const { return (_file_internal_server_error); }
+const std::string&			get_file_authenticated( void ) const { return (_file_authenticated); }
+const std::string&			get_file_register( void ) const { return (_file_register); }
+const std::string&			get_file_login( void ) const { return (_file_login); }
 
 
 #endif

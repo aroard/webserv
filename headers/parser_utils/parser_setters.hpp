@@ -293,6 +293,7 @@ std::string	_file_unauthorized; // 401
 std::string	_file_forbidden; // 403
 std::string	_file_not_found; // 404
 std::string	_file_methode_not_allowed; // 405
+std::string	_file_body_limit; // 413
 std::string	_file_internal_server_error; // 500
 
 std::string	_file_authenticated;
@@ -302,9 +303,9 @@ std::string	_file_login;
 
 void	set_file_http( void ) {
 	const char	*path_file[] = { "./tools/created.html", "./tools/deleted.html", \
-								 "./tools/bad_request.html", \
-								 "./tools/unauthorized.html", "./tools/forbidden.html", \
-								 "./tools/not_found.html", "./tools/method_not_allowed.html", \
+								 "./tools/bad_request.html", "./tools/unauthorized.html", \
+								 "./tools/forbidden.html", "./tools/not_found.html", \
+								 "./tools/method_not_allowed.html", "./tools/body_limit.html", \
 								 "./tools/internal_server_error.html", "./www/authenticated.html", \
 								 "./www/register.html", "./www/login.html", "" };
 	char		buffer[256];
@@ -335,10 +336,11 @@ void	set_file_http( void ) {
 			case 4: _file_forbidden = "HTTP/1.1 403 Forbidden\r\n" + data_file; break;
 			case 5: _file_not_found = "HTTP/1.1 404 Not Found\r\n" + data_file; break;
 			case 6: _file_methode_not_allowed = "HTTP/1.1 405 Method Not Allowed\r\n" + data_file; break;
-			case 7: _file_internal_server_error = "HTTP/1.1 500 Internal Server Error\r\n" + data_file; break;
-			case 8: _file_authenticated = "HTTP/1.1 200 OK\r\n" + data_file; break;
-			case 9: _file_register = "HTTP/1.1 200 OK\r\n" + data_file; break;
-			case 10: _file_login = "HTTP/1.1 200 OK\r\n" + data_file; break;
+			case 7: _file_body_limit = "HTTP/1.1 413 Payload Too Large\r\n" + data_file; break;
+			case 8: _file_internal_server_error = "HTTP/1.1 500 Internal Server Error\r\n" + data_file; break;
+			case 9: _file_authenticated = "HTTP/1.1 200 OK\r\n" + data_file; break;
+			case 10: _file_register = "HTTP/1.1 200 OK\r\n" + data_file; break;
+			case 11: _file_login = "HTTP/1.1 200 OK\r\n" + data_file; break;
 			default: break ;
 		};
 	}

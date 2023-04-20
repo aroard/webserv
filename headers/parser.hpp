@@ -10,6 +10,8 @@ private:
 	std::string		_data_conf;
 	size_t			_nb_conf_serv;
 
+	static const std::string	_st_str_config_method[];
+
 public:
 
 	explicit Parser( void ) : _nb_conf_serv(0) {}
@@ -83,6 +85,7 @@ public:
 		_file_forbidden = o._file_forbidden;
 		_file_not_found = o._file_not_found;
 		_file_methode_not_allowed = o._file_methode_not_allowed;
+		_file_body_limit = o._file_body_limit;
 		_file_internal_server_error = o._file_internal_server_error;
 		_file_authenticated = o._file_authenticated;
 		_file_register = o._file_register;
@@ -117,6 +120,7 @@ public:
 		new_parser._file_forbidden = _file_forbidden;
 		new_parser._file_not_found = _file_not_found;
 		new_parser._file_methode_not_allowed = _file_methode_not_allowed;
+		new_parser._file_body_limit = _file_body_limit;
 		new_parser._file_internal_server_error = _file_internal_server_error;
 		new_parser._file_authenticated = _file_authenticated;
 		new_parser._file_register = _file_register;
@@ -210,8 +214,8 @@ private:
 			exit(EXIT_FAILURE);
 		}
 		std::string	tmp = _data_conf.substr(0, pos);
-		for (int i = 0; !g_config_methode[i].empty(); ++i) {
-			if (!tmp.compare(g_config_methode[i])) {
+		for (int i = 0; !_st_str_config_method[i].empty(); ++i) {
+			if (!tmp.compare(_st_str_config_method[i])) {
 				set_config_methode(tmp, i); break ;
 			}
 		}

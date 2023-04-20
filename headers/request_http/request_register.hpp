@@ -16,18 +16,10 @@ void	get_request_register( void ) const {
 	}
 	
 	if (!form.count("name") || !form.count("username") || !form.count("email") || !form.count("password") || !form.count("age"))
-		Error_exception::error("HTTP/1.1 400 Bad Request\r\n\r\n<!DOCTYPE html>\r\n<html>\r\n<head>\r\n\
-<meta charset=\"UTF-8\">\r\n<meta http-equiv=\"refresh\" content=\"2; url=./register.html\">\r\n</head>\
-<body>\r\n<h1>Error number of values...</h1>\r\n</body\r\n</html>\r\n", 400);
-	
-	if (!g_data.add_formulaire(form["name"], form["username"], form["email"], form["password"], atoi(form["age"].c_str())))
-		Error_exception::error("HTTP/1.1 400 Bad Request\r\n\r\n<!DOCTYPE html>\r\n<html>\r\n<head>\r\n\
-<meta charset=\"UTF-8\">\r\n<meta http-equiv=\"refresh\" content=\"2; url=./register.html\">\r\n</head>\
-<body>\r\n<h1>User already created...<section>\r\n<img src=./tools/Dinocry.png alt=Ma photo>\r\n</section></h1>\r\n</body\r\n</html>\r\n", 400);
-
-	ret_request_http("HTTP/1.1 201 Created\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE html>\r\n<html>\r\n<head>\r\n\
-<meta charset=\"UTF-8\">\r\n<meta http-equiv=\"refresh\" content=\"2; url=./login.html\">\r\n</head>\
-<body>\r\n<h1>New User Created</h1>\r\n<section>\r\n<img src=./tools/Dinohappy.png alt=Ma photo>\r\n</section></body\r\n</html>\r\n", 201);
+		Error_exception::error(_st_ch_register_ret1, 400);
+	if (!_data.add_formulaire(form["name"], form["username"], form["email"], form["password"], atoi(form["age"].c_str())))
+		Error_exception::error(_st_ch_register_ret2, 400);
+	ret_request_http(_st_ch_register_ret3, 201);
 }
 
 
