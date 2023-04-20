@@ -66,12 +66,46 @@
       margin-top: 0;
     }
 
+	.button-container {
+	  position: absolute;
+	  top: 50%;
+	  left: 0;
+	  right: 0;
+	}
+
+	.button-container button {
+	  display: block;
+	  margin: 0 auto;
+	  width: 150px;
+	  height: 50px;
+	  background-color: #4CAF50;
+	  color: white;
+	  border: none;
+	  border-radius: 10px;
+	  font-size: 16px;
+	  cursor: pointer;
+	}
+
+	#register-button {
+	  position: absolute;
+	  left: 10%;
+	}
+
+	#login-button {
+	  position: absolute;
+	  right: 10%;
+	}
+  label {
+      display: inline-block;
+			width: 150px;
+			vertical-align: bottom;
+		}
   </style>
 </head>
 
 <body>
   <header>
-    <h1>About us</h1>
+    <h1>Login</h1>
   </header>
   <nav>
 		<a href="./index.html">Homepage</a>
@@ -79,19 +113,18 @@
 		<a href="./delete.php">My Files</a>
 		<a href="./aboutus.html">About us</a>
 		<a href="./authenticated.html">Authentication</a>
-  </nav>
-  <section>
-    <div class="person">
-      <img src="./tools/Alexis.jpg" alt="Person 1">
-      <h2>ROARD Alexis</h2>
-      <p>Alexis est un passionné de développement web depuis plus de 10 ans. Il est spécialisé dans les technologies front-end comme HTML, CSS et JavaScript.</p>
-    </div>
-    <div class="person">
-      <img src="./tools/Phap.avif" alt="Person 2">
-      <h2>NGUYEN Viet Phap</h2>
-      <p>Phap est une développeuse web expérimentée avec plus de 8 ans d'expérience dans l'industrie. Elle est spécialisée dans les technologies back-end telles que PHP et MySQL.</p>
-    </div>
-  </section>
-</body>
+  </nav> <br><br>
+  <form method="POST">
+		<input type="hidden" name="Methode-http" value="LOGIN">
+		
+		<!-- Identifiant -->
+		<label for="username">Identifiant </label>
+		<input name="Login-username" id="username" type="text" placeholder="Votre identifiant" required /><br/><br/>
+		<!-- Mot de passe -->
+		<label for="password">Mot de passe </label>
+		<input name="Login-password" id="password" type="password" placeholder="Votre mot de passe" required><br/><br/>
 
+		<input type="submit" value="valider">
+  </form>
+</body>
 </html>

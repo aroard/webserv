@@ -6,15 +6,16 @@ class Client
 {
 private:
 	std::map<std::string, std::string>	_request;
-	int									_socketClient;
+	const int							_socketClient;
 	const int							_port;
 	Parser								&_parser;
 
 	Client( void );
 
 public:
-	explicit Client(const int socketServer, const int port, Parser &parser) : _port(port), _parser(parser) {
-		if ((_socketClient = accept(socketServer, NULL, NULL)) < 0) {
+	explicit Client(const int socketServer, const int port, Parser &parser) : _socketClient(accept(socketServer, NULL, NULL)),
+	_port(port), _parser(parser) {
+		if (_socketClient < 0) {
 			perror("ERRPR accept"); exit(EXIT_FAILURE);
 		}
 	}
@@ -56,13 +57,13 @@ public:
 			if (pos != std::string::npos && msg.size() >= pos)
 				break ;
 		}
-		delete[] tmp;	
+		delete[] tmp;
 		if (msg.size() > _parser.get_body_limit(0) && _parser.get_body_limit(0) != 0)
 			return (false);
 		get_request_http(msg);
 		// std::cout << "\033[32m████████████████ REQUEST ████████████████\033[0m" << std::endl;
-		// for (std::map<std::string, std::string>::iterator it = request.begin();
-		// 	it != request.end(); ++it) {
+		// for (std::map<std::string, std::string>::iterator it = _request.begin();
+		// 	it != _request.end(); ++it) {
 		// 	std::cout << "["; put_line(it->first); std::cout << "]";
 		// 	std::cout << "("; put_line(it->second); std::cout << ")" << std::endl;
 		// }
@@ -84,12 +85,16 @@ public:
 					if (_request.at("Methode-http:") == "GET") get_request_get();
 					else if (_request.at("Methode-http:") == "POST") get_request_post();
 					else if (_request.at("Methode-http:") == "DELETE") get_request_delete();
-					else if (_request.at("Methode-http:") == "REDIRECT") get_request_redirection();
-					else ret_request_http(_parser.get_file_methode_not_allowed(), 405); 
+					else if (_request.at("Methode-http:") == "REDIRECT") get_request_redirect();
+					else if (_request.at("Methode-http:") == "REGISTER") get_request_register();
+					else if (_request.at("Methode-http:") == "LOGIN") get_request_login();
+					else if (_request.at("Methode-http:") == "LOGOUT") get_request_logout();
+					else ret_request_http(_parser.get_file_methode_not_allowed(), 405);
 					return ;
 				}
 			}
 		} catch (const Error_exception &e) {
+			// std::cout << e.what().first << " et " << e.what().second << std::endl;
 			ret_request_http(e.what().first, e.what().second); 
 			return ;
 		}
@@ -99,7 +104,7 @@ public:
 
 private:
 
-	void	get_request_http( const std::string &msg ) {		
+	void	get_request_http( const std::string &msg ) {
 		std::stringstream	ss(msg);
 		std::string			line;
 		size_t				pos;
@@ -226,7 +231,7 @@ private:
 	}
 
 
-	std::string	urldecode(const std::string& str) const {
+	std::string	urldecode(const std::string &str) const {
 		std::string	result;
 		char		ch;
 		int			hexCode;
@@ -242,14 +247,52 @@ private:
 			else
 				result += str[i];
 		}
-		return result;
+		return (result);
 	}
+
+
+	std::string	get_cookie_id( int i ) const {
+		if (i && !_request.count("Cookie:"))
+			Error_exception::error("HTTP/1.1 201 Created\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE html>\r\n<html>\r\n<head>\r\n\
+		<meta charset=\"UTF-8\">\r\n<meta http-equiv=\"refresh\" content=\"2; url=./authenticated.html\">\r\n</head>\
+		<body>\r\n<h1>User not login</h1>\r\n<section>\r\n<img src=./tools/Dinocry.png alt=Ma photo>\r\n</section>\r\n</body\r\n</html>\r\n", 201);
+		else if (!i && !_request.count("Cookie:"))
+			Error_exception::error("HTTP/1.1 201 Created\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE html>\r\n<html>\r\n<head>\r\n\
+		<meta charset=\"UTF-8\">\r\n<meta http-equiv=\"refresh\" content=\"2; url=../authenticated.html\">\r\n</head>\
+		<body>\r\n<h1>User not login</h1>\r\n<section>\r\n<img src=../tools/Dinocry.png alt=Ma photo>\r\n</section>\r\n</body\r\n</html>\r\n", 201);
+		size_t	pos = _request.at("Cookie:").find("session_id=");
+		if (pos == std::string::npos)
+			Error_exception::error(_parser.get_file_bad_request(), 400);
+		pos += 11;
+		std::string	cookie_id = _request.at("Cookie:").substr(pos, \
+			_request.at("Cookie:").find_first_of("\n\r") - pos);
+		return (cookie_id);
+	}
+
+
+	void	check_cookie_id( int i ) const {
+		std::string	cookie_id = get_cookie_id(i);
+		if (!g_data.check_login(cookie_id))
+			Error_exception::error("HTTP/1.1 201 Created\r\nContent-Type: text/html\r\n\r\n<!DOCTYPE html>\r\n<html>\r\n<head>\r\n\
+		<meta charset=\"UTF-8\">\r\n<meta http-equiv=\"refresh\" content=\"2; url=./authenticated.html\">\r\n</head>\
+		<body>\r\n<h1>User not login</h1>\r\n<section>\r\n<img src=./tools/Dinocry.png alt=Ma photo>\r\n</section>\r\n</body\r\n</html>\r\n", 201);
+		return ;
+	}
+
 
 	# include "./request_http/request_get.hpp"
 
 	# include "./request_http/request_post.hpp"
 
 	# include "./request_http/request_delete.hpp"
+
+	# include "./request_http/request_redirect.hpp"
+
+	# include "./request_http/request_register.hpp"
+
+	# include "./request_http/request_login.hpp"
+
+	# include "./request_http/request_logout.hpp"
 
 };
 

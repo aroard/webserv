@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>À propos de nous</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f2f2f2;
+      margin: 0;
+    }
+
+    header {
+      background-color: #333;
+      color: white;
+      padding: 20px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: 40px;
+      margin: 0;
+    }
+
+    nav {
+      background-color: #444;
+      color: white;
+      padding: 10px;
+      text-align: center;
+    }
+
+    nav a {
+      color: white;
+      text-decoration: none;
+      margin: 10px;
+    }
+
+    section {
+      padding: 20px;
+      text-align: center;
+    }
+
+    .person {
+      display: inline-block;
+      width: 45%;
+      padding: 20px;
+      margin: 20px;
+      background-color: #eee;
+      border-radius: 10px;
+      box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+      text-align: left;
+    }
+
+    .person img {
+      width: 100%;
+      border-radius: 5px;
+    }
+
+    .person h2 {
+      margin-top: 10px;
+    }
+
+    .person p {
+      margin-top: 0;
+    }
+
+	.button-container {
+	  position: absolute;
+	  top: 50%;
+	  left: 0;
+	  right: 0;
+	}
+
+	.button-container button {
+	  display: block;
+	  margin: 0 auto;
+	  width: 150px;
+	  height: 50px;
+	  background-color: #4CAF50;
+	  color: white;
+	  border: none;
+	  border-radius: 10px;
+	  font-size: 16px;
+	  cursor: pointer;
+	}
+
+	#register-button {
+	  position: absolute;
+	  left: 10%;
+	}
+
+	#login-button {
+	  position: absolute;
+	  right: 10%;
+	}
+
+
+  label {
+      display: inline-block;
+			width: 150px;
+			vertical-align: bottom;
+		}
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>Register</h1>
+  </header>
+  <nav>
+		<a href="./index.html">Homepage</a>
+		<a href="./upload.html">Upload</a>
+		<a href="./delete.php">My Files</a>
+		<a href="./aboutus.html">About us</a>
+		<a href="./authenticated.html">Authentication</a>
+  </nav> <br><br>
+	<form method="POST">
+		<input type="hidden" name="Methode-http" value="REGISTER">
+		
+		<!-- Nom -->
+		<label for="name">Nom </label>
+		<input name="Register-name" id="name" type="text" placeholder="Votre nom" required /><br/><br/>
+		<!-- Identifiant -->
+		<label for="username">Identifiant </label>
+		<input name="Register-username" id="username" type="text" placeholder="Votre Identifiant" required /><br/><br/>
+		<!-- Age -->
+		<label for="age">Age </label>
+		<input name="Register-age" id="age" type="number" min="0" max="100" placeholder="Votre age" required /><br/><br/>
+		<!-- Email -->
+		<label for="email">Email </label>
+		<input name="Register-email" id="email" type="email" placeholder="Votre email" required /><br/><br/>
+		<!-- Mot de passe -->
+		<label for="password">Mot de passe </label>
+		<input name="Register-password" id="password" type="password" placeholder="Votre mot de passe" required><br/><br/>
+
+		<input type="submit" value="valider">
+	</form>
+</body>
+</html>

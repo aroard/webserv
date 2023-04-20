@@ -55,6 +55,7 @@
 
 
 class Error_exception;
+class Data;
 class Parser;
 class Server;
 class Client;
@@ -76,7 +77,28 @@ const std::string	g_img[] = {	".jpg", ".png", ".gif", \
 const std::string	g_video[] = { ".mp4", ".avi", ".mov", ".wmv", \
 									".flv", ".mkv", ".webm", ""};
 
+
+	void	put_line( std::string line ) {
+		for (std::string::iterator it = line.begin();
+			it != line.end(); ++it) {
+			if (*it==13)
+				std::cout << "(\\r)" << std::flush;
+			else if (*it==10)
+				std::cout << "(\\n)" << std::endl;
+			else if (*it > 31 && *it < 127)
+				std::cout << *it << std::flush;
+			else
+				std::cout << (int)*it << std::flush;
+		}
+		return ;
+	}
+
+
 # include "error_exception.hpp"
+# include "data.hpp"
+
+Data g_data;
+
 # include "parser.hpp"
 # include "client.hpp"
 # include "server.hpp"

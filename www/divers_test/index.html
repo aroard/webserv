@@ -1,12 +1,33 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ma page avec une image</title>
+  <title>Page avec cookie</title>
+  <meta charset="UTF-8">
 </head>
 <body>
-  <h1>Ma belle photo</h1>
-  <img src="../upload/template.png" alt="Ma photo">
-  <br>
-  <a href="../upload/template.png" download>Télécharger la photo</a>
+
+  <h1>Page avec cookie</h1>
+
+  <p>Veuillez entrer votre nom:</p>
+  <form>
+    <input type="text" name="name">
+    <input type="submit" value="Envoyer">
+  </form>
+
+  <script>
+    // Création d'un cookie avec le nom entré dans le formulaire
+    document.querySelector('form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      document.cookie = "name=" + document.querySelector('input[name=name]').value;
+      alert('Cookie créé!');
+    });
+
+    // Lecture du cookie et affichage du message personnalisé
+    var cookieValue = document.cookie.replace(/(?:(?:^|.*;\s*)name\s*\=\s*([^;]*).*$)|^.*$/, "$1");
+    if (cookieValue) {
+      document.write('<p>Bienvenue ' + cookieValue + '!</p>');
+    }
+  </script>
+
 </body>
 </html>

@@ -77,12 +77,16 @@ public:
 		_file_save = o._file_save;
 		_body_limit = o._body_limit;
 		_file_created = o._file_created;
+		_file_deleted = o._file_deleted;
 		_file_bad_request = o._file_bad_request;
 		_file_unauthorized = o._file_unauthorized;
 		_file_forbidden = o._file_forbidden;
 		_file_not_found = o._file_not_found;
 		_file_methode_not_allowed = o._file_methode_not_allowed;
 		_file_internal_server_error = o._file_internal_server_error;
+		_file_authenticated = o._file_authenticated;
+		_file_register = o._file_register;
+		_file_login = o._file_login;
 		return (*this);
 	}
 
@@ -107,12 +111,16 @@ public:
 		new_parser._file_save.push_back(std::pair<size_t, std::string>(1, get_file_save(i)));
 		new_parser._body_limit.push_back(std::pair<size_t, size_t>(1, get_body_limit(i)));
 		new_parser._file_created = _file_created;
+		new_parser._file_deleted = _file_deleted;
 		new_parser._file_bad_request = _file_bad_request;
 		new_parser._file_unauthorized = _file_unauthorized;
 		new_parser._file_forbidden = _file_forbidden;
 		new_parser._file_not_found = _file_not_found;
 		new_parser._file_methode_not_allowed = _file_methode_not_allowed;
 		new_parser._file_internal_server_error = _file_internal_server_error;
+		new_parser._file_authenticated = _file_authenticated;
+		new_parser._file_register = _file_register;
+		new_parser._file_login = _file_login;
 		return (new_parser);
 	}
 
@@ -262,6 +270,7 @@ private:
 		return (count);
 	}
 
+
 	bool parse_empty_parameters(std::string str, int create) {
 		std::ifstream ofs;
 
@@ -371,7 +380,7 @@ private:
 			_file_save.push_back(std::pair<size_t, std::string>(_nb_conf_serv, "./www/upload/"));
 		}		
 		if (get_body_limit(_nb_conf_serv - 1) > MAX_BODY_LIMIT) {
-			std::cerr << "Error: Body limit cannot exceed 1 GB !" << std::endl;
+			std::cerr << "Error: Body limit cannot exceed: " << MAX_BODY_LIMIT << std::endl;
 			exit(EXIT_FAILURE);
 		} 
 	}

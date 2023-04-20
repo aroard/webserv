@@ -35,6 +35,7 @@ void	set_request_post_data( const std::string &host,
 
 
 void	get_request_post( void ) const {
+	check_cookie_id(1);
 	if (!_request.count("Request-Content") || !_request.at("Request-Content").size())
 		Error_exception::error(_parser.get_file_bad_request(), 400);
 	if (!_request.count("Content-Type:"))
@@ -44,7 +45,13 @@ void	get_request_post( void ) const {
 	_request.count("Host:") \
 		? set_request_post_data(_request.at("Host:"), tmp, boundary) \
 		: set_request_post_data(std::string(), tmp, boundary);
-	ret_request_http(_parser.get_file_created(), 201);
+	std::string redirection = _parser.get_file_created();
+	std::stringstream ss;
+	ss << _port;
+	std::string port_str = ss.str();
+	if (redirection.find("PORT") != std::string::npos)
+		redirection.replace(redirection.find("PORT"), 4, port_str);
+	ret_request_http(redirection, 201);
 	return ;
 }
 

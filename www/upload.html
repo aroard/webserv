@@ -99,43 +99,21 @@
     <h1>Upload</h1>
   </header>
   <nav>
-		<a href="./index.html">Homepage</a>
-		<a href="upload.html">Upload</a>
-		<a href="delete.php">My Files</a>
-		<a href="./aboutus.html">About us</a>
+      <a href="./index.html">Homepage</a>
+      <a href="./upload.html">Upload</a>
+      <a href="./delete.php">My Files</a>
+      <a href="./aboutus.html">About us</a>
+      <a href="./authenticated.html">Authentication</a>
   </nav>
   <body>
     <h1>Upload de fichier</h1>
-    <form action="upload.php" method="post" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data">
       <label for="file">Sélectionnez un fichier à uploader :</label>
       <input type="file" name="file" id="file"><br><br>
       <input type="submit" value="Uploader">
     </form>
-    <div id="message"></div>
-    <script>
-    document.querySelector('form').addEventListener('submit', function(event) {
-      event.preventDefault();
-      var fileInput = document.querySelector('#file');
-      if (!fileInput || !fileInput.value) {
-        alert('Veuillez sélectionner un fichier à uploader.');
-        return;
-      }
-      var xhr = new XMLHttpRequest();
-      xhr.open('POST', 'upload.php');
-      xhr.onload = function() {
-      if (xhr.status === 201) { // vérifie le statut de la réponse
-        document.querySelector('#message').innerHTML = '<span style="color:green;">Upload réussi !</span>';
-        setTimeout(function() {
-          document.querySelector('#message').innerHTML = '';
-        }, 2000);
-      } else {
-        alert('Le fichier est trop lourd !');
-      }
-      };
-      var formData = new FormData(document.querySelector('form'));
-      xhr.send(formData);
-    });
-    </script>
   </body>
+</body>
+</html>
 
 

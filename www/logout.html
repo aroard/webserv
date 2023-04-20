@@ -66,12 +66,41 @@
       margin-top: 0;
     }
 
+	.button-container {
+	  position: absolute;
+	  top: 50%;
+	  left: 0;
+	  right: 0;
+	}
+
+	.button-container button {
+	  display: block;
+	  margin: 0 auto;
+	  width: 150px;
+	  height: 50px;
+	  background-color: #4CAF50;
+	  color: white;
+	  border: none;
+	  border-radius: 10px;
+	  font-size: 16px;
+	  cursor: pointer;
+	}
+
+	#register-button {
+	  position: absolute;
+	  left: 10%;
+	}
+
+	#login-button {
+	  position: absolute;
+	  right: 10%;
+	}
   </style>
 </head>
 
 <body>
   <header>
-    <h1>About us</h1>
+    <h1>Register</h1>
   </header>
   <nav>
 		<a href="./index.html">Homepage</a>
@@ -79,19 +108,10 @@
 		<a href="./delete.php">My Files</a>
 		<a href="./aboutus.html">About us</a>
 		<a href="./authenticated.html">Authentication</a>
-  </nav>
-  <section>
-    <div class="person">
-      <img src="./tools/Alexis.jpg" alt="Person 1">
-      <h2>ROARD Alexis</h2>
-      <p>Alexis est un passionné de développement web depuis plus de 10 ans. Il est spécialisé dans les technologies front-end comme HTML, CSS et JavaScript.</p>
-    </div>
-    <div class="person">
-      <img src="./tools/Phap.avif" alt="Person 2">
-      <h2>NGUYEN Viet Phap</h2>
-      <p>Phap est une développeuse web expérimentée avec plus de 8 ans d'expérience dans l'industrie. Elle est spécialisée dans les technologies back-end telles que PHP et MySQL.</p>
-    </div>
-  </section>
+  </nav> <br><br>
+	<form method="POST">
+		<input type="hidden" name="Methode-http" value="LOGOUT">
+		<input type="submit" value="valided">
+	</form>
 </body>
-
 </html>
