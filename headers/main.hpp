@@ -3,15 +3,9 @@
 
 
 # include <iostream>
-# include <sys/socket.h>
-# include <netinet/in.h>
-# include <netdb.h>
 # include <arpa/inet.h>
 # include <unistd.h>
 # include <cstring> 
-# include <pthread.h>
-# include <stdio.h>
-# include <cstdlib>
 # include <fstream>
 # include <sstream>
 # include <map>
@@ -20,13 +14,9 @@
 # include <algorithm>
 # include <ctime>
 # include <iomanip>
-# include <sys/types.h>
 # include <sys/wait.h>
-# include <fcntl.h>
 # include <sys/event.h>
 # include <sys/time.h>
-# include <string>
-# include <cerrno>
 
 
 # ifndef MAX_LISTEN

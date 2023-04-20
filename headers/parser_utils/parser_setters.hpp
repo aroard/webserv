@@ -302,9 +302,10 @@ std::string	_file_login;
 
 
 void	set_file_http( void ) {
+	const std::string	file_not_found = get_error_page(0);
 	const char	*path_file[] = { "./tools/created.html", "./tools/deleted.html", \
 								 "./tools/bad_request.html", "./tools/unauthorized.html", \
-								 "./tools/forbidden.html", "./tools/not_found.html", \
+								 "./tools/forbidden.html", file_not_found.c_str(), \
 								 "./tools/method_not_allowed.html", "./tools/body_limit.html", \
 								 "./tools/internal_server_error.html", "./www/authenticated.html", \
 								 "./www/register.html", "./www/login.html", "" };
